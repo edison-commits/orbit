@@ -9,7 +9,12 @@ import { INTERACTION_TYPES } from '@/lib/constants';
 export default function NewInteractionScreen() {
   const params = useLocalSearchParams<{ contactId?: string }>();
   const [contacts, setContacts] = useState(() => contactsRepository.listByUrgency());
-  const [selectedContactIds, setSelectedContactIds] = useState<string[]>(() => (params.contactId ? [params.contactId] : []));
+  const [selectedContactIds, setSelectedContactIds] = useState<string[]>(() => {
+    // Pre-select overdue + due contacts when opened from "Quick log" (no pre-selected contact)
+    if (params.contactId) return [params.contactId];
+    const all = contactsRepository.listByUrgency();
+    return all.filter((c) => c.dueState === 'overdue' || c.dueState === 'due').map((c) => c.id);
+  });
   const [interactionType, setInteractionType] = useState<string | null>('text');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);

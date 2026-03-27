@@ -21,6 +21,33 @@ export default function HomeScreen() {
     }, []),
   );
 
+  const totalContacts = aggregates.reduce((sum, a) => sum + a.count, 0);
+
+  if (totalContacts === 0) {
+    return (
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        <Text variant="bodyMedium" style={{ color: '#666' }}>
+          Who needs you — now, today, and soon.
+        </Text>
+        <Card>
+          <Card.Content style={{ gap: 12, alignItems: 'center', paddingVertical: 24 }}>
+            <Text variant="headlineSmall" style={{ textAlign: 'center' }}>
+              Your orbit is empty
+            </Text>
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: '#666', maxWidth: 260 }}>
+              Add the people you want to stay connected with. Orbit handles the rest.
+            </Text>
+            <Link href="/contact/new" asChild>
+              <Button mode="contained" icon="plus" style={{ marginTop: 4 }}>
+                Add your first person
+              </Button>
+            </Link>
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       <Text variant="bodyMedium" style={{ color: '#666' }}>

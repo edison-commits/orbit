@@ -3,7 +3,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, Image, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Searchbar, Text, Surface } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
-import { formatDueLabel } from '@/lib/dates';
+import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
 import { useUiStore } from '@/store/ui';
 import { orbitTheme, DUE_COLORS } from '@/lib/theme';
 import { getDueColor } from '@/lib/dates';
@@ -55,11 +55,18 @@ export default function PeopleScreen() {
       {/* Contact list */}
       {filtered.length === 0 ? (
         <Card>
-          <Card.Content>
-            <Text variant="titleMedium">{search ? 'No matches' : 'No people here'}</Text>
-            <Text variant="bodyMedium" style={{ marginTop: 4 }}>
-              {search ? 'Try a different name' : 'Add someone new to get started.'}
+          <Card.Content style={{ gap: 8 }}>
+            <Text variant="titleMedium">{search ? 'No matches' : 'No people yet'}</Text>
+            <Text variant="bodyMedium" style={{ color: '#666' }}>
+              {search
+                ? `Nobody named "${search}" in your orbit.`
+                : 'Add the people you want to stay connected with.'}
             </Text>
+            {!search && (
+              <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
+                <Button mode="contained" icon="plus">Add your first person</Button>
+              </Link>
+            )}
           </Card.Content>
         </Card>
       ) : (
@@ -95,6 +102,7 @@ export default function PeopleScreen() {
                   </Text>
                   <Text variant="bodySmall" style={{ color: '#888' }}>
                     {formatDueLabel(contact.nextDueAt)}
+                    {contact.lastInteractionAt ? ` · ${formatDaysAgo(contact.lastInteractionAt)}` : ''}
                   </Text>
                 </View>
                 {/* Right side */}

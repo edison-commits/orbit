@@ -17,6 +17,8 @@ import {
   formatOrbitDateTime,
   getDaysUntilDate,
   getDueColor,
+  formatBirthday,
+  getDaysUntilBirthday,
 } from '@/lib/dates';
 import { SNOOZE_OPTIONS } from '@/lib/reminders';
 import { orbitTheme } from '@/lib/theme';
@@ -118,6 +120,7 @@ export default function ContactDetailScreen() {
 
   const dueColor = getDueColor(contact.dueState);
   const dueDays = getDaysUntilDate(contact.nextDueAt);
+  const birthdayDays = getDaysUntilBirthday(contact.birthday);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
@@ -207,19 +210,38 @@ export default function ContactDetailScreen() {
           {contact.phone ? (
             <View style={styles.infoRow}>
               <Icon source="phone" size={18} color="#888" />
-              <Text variant="bodyMedium">{contact.phone}</Text>
+              <Text variant="bodyMedium" style={{ flex: 1 }}>{contact.phone}</Text>
+              <Pressable onPress={() => Linking.openURL(`tel:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
+                <Icon source="phone-outgoing" size={18} color={orbitTheme.colors.primary} />
+              </Pressable>
+              <Pressable onPress={() => Linking.openURL(`sms:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
+                <Icon source="message-text" size={18} color={orbitTheme.colors.primary} />
+              </Pressable>
             </View>
           ) : null}
           {contact.email ? (
-            <View style={styles.infoRow}>
+            <Pressable
+              onPress={() => Linking.openURL(`mailto:${contact.email}`)}
+              style={({ pressed }) => [styles.infoRow, pressed && { opacity: 0.6 }]}
+            >
               <Icon source="email" size={18} color="#888" />
-              <Text variant="bodyMedium">{contact.email}</Text>
-            </View>
+              <Text variant="bodyMedium" style={{ color: orbitTheme.colors.primary, flex: 1 }}>{contact.email}</Text>
+              <Icon source="open-in-new" size={14} color="#AAA" />
+            </Pressable>
           ) : null}
           {contact.birthday ? (
             <View style={styles.infoRow}>
               <Icon source="cake-variant" size={18} color="#888" />
-              <Text variant="bodyMedium">{contact.birthday}</Text>
+              <Text variant="bodyMedium" style={{ flex: 1 }}>
+                {formatBirthday(contact.birthday)}
+                {birthdayDays !== null && birthdayDays <= 14
+                  ? birthdayDays === 0
+                    ? ' · today!'
+                    : birthdayDays === 1
+                    ? ' · tomorrow'
+                    : ` · in ${birthdayDays} days`
+                  : ''}
+              </Text>
             </View>
           ) : null}
         </Surface>
