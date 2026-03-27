@@ -15,6 +15,7 @@ export interface CreateContactRecord {
   id: string;
   name: string;
   nickname?: string | null;
+  photoUri?: string | null;
   relationshipType: string;
   notes?: string | null;
   birthday?: string | null;
@@ -31,6 +32,7 @@ export interface UpdateContactRecord {
   id: string;
   name: string;
   nickname?: string | null;
+  photoUri?: string | null;
   relationshipType: string;
   notes?: string | null;
   birthday?: string | null;
@@ -150,6 +152,7 @@ export const contactsRepository = {
         id,
         name,
         nickname,
+        photo_uri,
         relationship_type,
         notes,
         birthday,
@@ -162,11 +165,12 @@ export const contactsRepository = {
         due_state,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         input.id,
         input.name,
         input.nickname ?? null,
+        input.photoUri ?? null,
         input.relationshipType,
         input.notes ?? null,
         input.birthday ?? null,
@@ -219,6 +223,7 @@ export const contactsRepository = {
       `UPDATE contacts
        SET name = ?,
            nickname = ?,
+           photo_uri = ?,
            relationship_type = ?,
            notes = ?,
            birthday = ?,
@@ -233,6 +238,7 @@ export const contactsRepository = {
       [
         input.name,
         input.nickname ?? null,
+        input.photoUri ?? null,
         input.relationshipType,
         input.notes ?? null,
         input.birthday ?? null,

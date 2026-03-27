@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, Image, Pressable, StyleSheet } from 'react-native';
 import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
+import { orbitTheme } from '@/lib/theme';
 import type { Contact } from '@/types/models';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 
@@ -19,6 +20,7 @@ export default function EditContactScreen() {
   const [contact, setContact] = useState<Contact | null>(() => contactsRepository.getById(id));
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [birthday, setBirthday] = useState('');
@@ -41,6 +43,7 @@ export default function EditContactScreen() {
     if (!contact) return;
     setName(contact.name);
     setNickname(contact.nickname ?? '');
+    setPhotoUri(contact.photoUri ?? null);
     setRelationshipType(contact.relationshipType);
     setCadence(contact.cadence);
     setNotes(contact.notes ?? '');
@@ -59,6 +62,16 @@ export default function EditContactScreen() {
     }
   }, [contact]);
 
+  async function handlePickPhoto() {
+    const { pickImageAsync } = await import('@/lib/imagePicker');
+    const uri = await pickImageAsync();
+    if (uri) setPhotoUri(uri);
+  }
+
+  function handleRemovePhoto() {
+    setPhotoUri(null);
+  }
+
   async function handleSave() {
     if (!contact) return;
 
@@ -75,6 +88,7 @@ export default function EditContactScreen() {
         id: contact.id,
         name,
         nickname: nickname || null,
+        photoUri,
         relationshipType,
         cadence,
         notes: notes || null,
@@ -100,7 +114,32 @@ export default function EditContactScreen() {
       <Text variant="headlineSmall">Edit person</Text>
       <Text variant="bodyMedium">Tweak the details without losing the thread.</Text>
 
-      <TextInput label="Name" value={name} onChangeText={setName} autoFocus />
+      {/* Photo */}
+      <View style={styles_edit.avatarSection}>
+        <Pressable onPress={handlePickPhoto}>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles_edit.avatarPhoto} />
+          ) : (
+            <View style={[styles_edit.avatarPlaceholder, { backgroundColor: orbitTheme.colors.primaryContainer }]}>
+              <Text style={{ color: orbitTheme.colors.onPrimaryContainer, fontSize: 22, fontWeight: '700' }}>
+                {name[0]?.toUpperCase() ?? '?'}
+              </Text>
+            </View>
+          )}
+        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+          <Button mode="text" compact onPress={handlePickPhoto}>
+            {photoUri ? 'Change' : 'Add photo'}
+          </Button>
+          {photoUri ? (
+            <Button mode="text" compact onPress={handleRemovePhoto}>
+              Remove
+            </Button>
+          ) : null}
+        </View>
+      </View>
+
+      <TextInput label="Name" value={name} onChangeText={setName} />
       <TextInput label="Nickname" value={nickname} onChangeText={setNickname} />
 
       <View style={{ gap: 8 }}>
@@ -204,3 +243,22 @@ export default function EditContactScreen() {
     </ScrollView>
   );
 }
+
+const styles_edit = StyleSheet.create({
+  avatarSection: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  avatarPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

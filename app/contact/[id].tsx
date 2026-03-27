@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useLocalSearchParams, Link, useFocusEffect } from 'expo-router';
-import { ScrollView, View, StyleSheet, Linking, Pressable } from 'react-native';
+import { ScrollView, View, StyleSheet, Linking, Pressable, Image } from 'react-native';
 import { Button, Chip, Divider, HelperText, Text, Surface, Icon } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { interactionsRepository } from '@/db/repositories/interactionsRepository';
@@ -133,9 +133,13 @@ export default function ContactDetailScreen() {
       {/* Person header */}
       <View style={{ gap: 6 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Surface style={[styles.avatar, { backgroundColor: orbitTheme.colors.primary }]} elevation={1}>
-            <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
-          </Surface>
+          {contact.photoUri ? (
+            <Image source={{ uri: contact.photoUri }} style={styles.avatarPhoto} />
+          ) : (
+            <Surface style={[styles.avatar, { backgroundColor: orbitTheme.colors.primary }]} elevation={1}>
+              <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
+            </Surface>
+          )}
           <View style={{ flex: 1 }}>
             <Text variant="headlineMedium" style={{ fontWeight: '700' }}>
               {contact.name}
@@ -424,6 +428,11 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarPhoto: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   avatarInitial: {
     color: '#fff',
