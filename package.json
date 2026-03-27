@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.100.1",
     "babel-preset-expo": "^55.0.12",
     "date-fns": "^4.1.0",
     "expo": "~55.0.8",

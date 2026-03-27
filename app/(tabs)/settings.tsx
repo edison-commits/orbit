@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
 import { ScrollView, View, StyleSheet, Alert, Linking } from 'react-native';
-import { Button, Card, Chip, Divider, Text, TextInput, IconButton } from 'react-native-paper';
+import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
 import { settingsService } from '@/features/settings/settingsService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
 import { orbitTheme } from '@/lib/theme';
 import { feedbackRepository, Feedback, FeedbackType } from '@/db/repositories/feedbackRepository';
+import { createBackup, listBackups, restoreBackup } from '@/lib/backup';
 
 const CADENCE_LABELS: Record<number, string> = {
   7: '1 week',
@@ -40,6 +41,12 @@ export default function SettingsScreen() {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackList, setFeedbackList] = useState<Feedback[]>(() => feedbackRepository.getAll());
+
+  // Backup state
+  const [backupList, setBackupList] = useState<{ name: string; created_at: string }[]>([]);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [showBackupList, setShowBackupList] = useState(false);
 
   function refreshFeedback() {
     setFeedbackList(feedbackRepository.getAll());
@@ -106,6 +113,61 @@ export default function SettingsScreen() {
     const body = encodeURIComponent(feedbackMessage.trim());
     const subject = encodeURIComponent('[Orbit Feedback]');
     Linking.openURL(`mailto:edison@idiotic.solutions?subject=${subject}&body=${body}`);
+  }
+
+  async function handleBackup() {
+    setIsBackingUp(true);
+    try {
+      const filename = await createBackup();
+      Alert.alert('Backup saved', `Uploaded as ${filename}`);
+      await loadBackupList();
+    } catch (e: unknown) {
+      Alert.alert('Backup failed', e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setIsBackingUp(false);
+    }
+  }
+
+  async function loadBackupList() {
+    try {
+      const list = await listBackups();
+      setBackupList(list);
+    } catch (e: unknown) {
+      // silently fail — will be empty
+    }
+  }
+
+  function handleShowBackups() {
+    if (!showBackupList) {
+      loadBackupList();
+    }
+    setShowBackupList(!showBackupList);
+  }
+
+  async function handleRestore(filename: string) {
+    Alert.alert(
+      'Restore backup?',
+      'This will replace all current data — contacts, interactions, and feedback. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Restore',
+          style: 'destructive',
+          onPress: async () => {
+            setIsRestoring(true);
+            try {
+              await restoreBackup(filename);
+              Alert.alert('Done', 'Your data has been restored.');
+              setShowBackupList(false);
+            } catch (e: unknown) {
+              Alert.alert('Restore failed', e instanceof Error ? e.message : 'Unknown error');
+            } finally {
+              setIsRestoring(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   return (
@@ -235,6 +297,62 @@ export default function SettingsScreen() {
         </Card>
       )}
 
+      {/* Cloud Backup */}
+      <Card>
+        <Card.Content style={{ gap: 12 }}>
+          <Text variant="titleMedium">☁️ Cloud Backup</Text>
+          <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
+            Export your contacts, interactions, and feedback to Supabase Storage. Restore anytime.
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button
+              mode="contained"
+              onPress={handleBackup}
+              loading={isBackingUp}
+              disabled={isBackingUp}
+              style={{ flex: 1 }}
+              icon="cloud-upload"
+            >
+              {isBackingUp ? 'Uploading…' : 'Backup now'}
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={handleShowBackups}
+            >
+              {showBackupList ? 'Hide' : 'Restore'}
+            </Button>
+          </View>
+
+          {showBackupList && (
+            <View style={{ gap: 8, marginTop: 4 }}>
+              {backupList.length === 0 ? (
+                <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>No backups yet — tap "Backup now" to create one.</Text>
+              ) : (
+                backupList.map((b) => (
+                  <View key={b.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodySmall">{b.name.replace('orbit_backup_', '').replace('.json', '')}</Text>
+                      <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
+                        {new Date(b.created_at).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Button
+                      mode="text"
+                      compact
+                      loading={isRestoring}
+                      onPress={() => handleRestore(b.name)}
+                      disabled={isRestoring}
+                    >
+                      Restore
+                    </Button>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+        </Card.Content>
+      </Card>
+
       {/* Data */}
       <Card>
         <Card.Content style={{ gap: 12 }}>
@@ -261,7 +379,7 @@ export default function SettingsScreen() {
           <Text variant="titleMedium">About Orbit</Text>
           <Text variant="bodySmall" style={{ color: '#666' }}>
             Version 1.0.0{'\n'}
-            Your data is stored locally on this device and never leaves it.
+            Your data is stored locally on this device. Use Cloud Backup in Settings to export to Supabase.
           </Text>
         </Card.Content>
       </Card>
