@@ -375,12 +375,41 @@ export default function SettingsScreen() {
       {/* Cloud Backup */}
       <Card>
         <Card.Content style={{ gap: 12 }}>
-          <Text variant="titleMedium">☁️ Cloud Backup</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text variant="titleMedium">☁️ Cloud Backup</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: orbitTheme.colors.primaryContainer, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+              <Text variant="labelSmall" style={{ color: orbitTheme.colors.onPrimaryContainer, fontWeight: '700', letterSpacing: 0.5 }}>PRO</Text>
+            </View>
+          </View>
 
           {!backupConfigured ? (
             <>
-              <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
-                Enter your Supabase service role key to enable backup. Get it from: Project Settings → API → Service Role Secret.
+              {/* Pro upsell banner */}
+              <View style={{ backgroundColor: orbitTheme.colors.primaryContainer, borderRadius: 12, padding: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text variant="bodyMedium" style={{ fontWeight: '600', color: orbitTheme.colors.onPrimaryContainer, flex: 1 }}>
+                    Try Pro free for 30 days
+                  </Text>
+                  <Button
+                    mode="contained"
+                    compact
+                    onPress={() =>
+                      Alert.alert(
+                        'Orbit Pro',
+                        'Cloud backup, multi-device sync, and priority support.\n\nFree for 30 days, then $4/month or $30/year.\n\nGet started by entering your Supabase service role key below.',
+                        [{ text: 'Got it' }],
+                      )
+                    }
+                    style={{ backgroundColor: orbitTheme.colors.primary }}
+                    labelStyle={{ fontSize: 12 }}
+                  >
+                    Learn more
+                  </Button>
+                </View>
+              </View>
+
+              <Text variant="bodySmall" style={{ color: '#666', marginTop: 4 }}>
+                Enter your Supabase service role key to activate Pro. Your key is stored securely on this device only.
               </Text>
               <TextInput
                 mode="outlined"
@@ -397,7 +426,7 @@ export default function SettingsScreen() {
                 loading={isSavingKey}
                 disabled={isSavingKey || !apiKeyInput.trim()}
               >
-                Save key securely
+                Start 30-day free trial
               </Button>
               <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
                 Stored locally on this device only — never sent to any server except Supabase.
@@ -406,12 +435,8 @@ export default function SettingsScreen() {
           ) : (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {connectionStatus === 'ok' && (
-                  <Text variant="bodySmall" style={{ color: '#16a34a' }}>✅ Connected</Text>
-                )}
-                {connectionStatus === 'error' && (
-                  <Text variant="bodySmall" style={{ color: '#dc2626' }}>⚠️ Connection error — re-check key</Text>
-                )}
+                <Text variant="labelMedium" style={{ color: '#16a34a', fontWeight: '600' }}>✅ Pro active</Text>
+                <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>· 30 days free</Text>
                 <View style={{ flex: 1 }} />
                 <Button mode="text" compact onPress={handleTestConnection}>
                   Test

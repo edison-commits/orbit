@@ -59,3 +59,25 @@
 - Data local-only (no cloud sync)
 - No push notifications yet
 - Android build not yet tested
+
+---
+
+## 2026-03-27 — App Store Submission
+
+**Status:** Paused — Apple Developer Program enrollment pending (~24h). Reminder set for 2026-03-28 9 AM PDT.
+
+**What's needed:**
+1. Apple Developer Program membership ($99/year) — is London a member?
+2. App Store Connect API key uploaded to Expo
+3. App Store listing: screenshots (iPhone 6.5", 6.9", iPad 12.9"), description, keywords, privacy policy URL, support URL
+4. EAS Submit configured in eas.json
+
+**Pre-work done:**
+- iOS bundle ID: `com.orbit.app` ✅ (already in app.json)
+- App icons: all generated ✅
+- App Store copy: written ✅ ("Orbit · Stay connected with the people who matter")
+- Privacy policy URL: needed (can use a free one from iubenda/privacypolicytemplate.net)
+
+**Steps once Apple account is connected:**
+1. `eas submit --platform ios --latest --auto-submit` builds + submits
+2. Or: build with `eas build --platform ios --profile production` then submit separately
