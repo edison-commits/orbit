@@ -1,6 +1,11 @@
 import { addDays, differenceInCalendarDays, format, isBefore, startOfDay } from 'date-fns';
 import { getEffectiveDueAt } from '@/lib/reminders';
+import { DUE_COLORS } from '@/lib/theme';
 import type { DueState } from '@/types/models';
+
+export function getDueColor(dueState: DueState | string): string {
+  return DUE_COLORS[dueState as keyof typeof DUE_COLORS] ?? DUE_COLORS.upcoming;
+}
 
 export function toIsoNow() {
   return new Date().toISOString();

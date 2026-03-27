@@ -15,3 +15,12 @@ export const orbitTheme: MD3Theme = {
     error: '#C65B4B',
   },
 };
+
+// Traffic-light urgency palette
+export const DUE_COLORS = {
+  overdue: '#C65B4B',   // red
+  due:     '#E07B39',   // amber
+  upcoming: '#5A9E7C',  // green
+  paused:  '#9CA3AF',   // gray
+  snoozed: '#9CA3AF',   // gray
+} as const;

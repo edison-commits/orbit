@@ -1,9 +1,16 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Text } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
-import { formatOrbitDate } from '@/lib/dates';
+import { formatDueLabel, getDueColor } from '@/lib/dates';
+import { DUE_COLORS } from '@/lib/theme';
+
+const SECTION_LABELS: Record<string, string> = {
+  overdue: 'Overdue',
+  due: 'Due today',
+  upcoming: 'Upcoming',
+};
 
 export default function HomeScreen() {
   const [aggregates, setAggregates] = useState(() => getHomeAggregates());
@@ -16,39 +23,97 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <Card>
-        <Card.Content>
-          <Text variant="headlineSmall">Home</Text>
-          <Text variant="bodyMedium">A quick read on who needs love now, today, and soon.</Text>
-        </Card.Content>
-      </Card>
+      <Text variant="headlineSmall">Home</Text>
+      <Text variant="bodyMedium" style={{ color: '#666', marginTop: -8 }}>
+        Who needs you — now, today, and soon.
+      </Text>
 
       <View style={{ gap: 12 }}>
-        {aggregates.map((aggregate) => (
-          <Card key={aggregate.dueState}>
-            <Card.Content style={{ gap: 10 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                <Text variant="titleMedium">{aggregate.title}</Text>
-                <Chip compact>{aggregate.count}</Chip>
-              </View>
-              <Text variant="bodyMedium">{aggregate.summary}</Text>
-              {aggregate.contacts.map((contact) => (
-                <View
-                  key={contact.id}
-                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
-                >
-                  <Text variant="bodySmall">{contact.name}</Text>
-                  <Text variant="bodySmall">{formatOrbitDate(contact.nextDueAt)}</Text>
+        {aggregates.map((aggregate) => {
+          const color = getDueColor(aggregate.dueState);
+          return (
+            <Card key={aggregate.dueState}>
+              <Card.Content style={{ gap: 10 }}>
+                {/* Header row */}
+                <View style={styles.header}>
+                  <View style={styles.labelRow}>
+                    <View style={[styles.dot, { backgroundColor: color }]} />
+                    <Text variant="titleMedium">{SECTION_LABELS[aggregate.dueState] ?? aggregate.dueState}</Text>
+                  </View>
+                  <Chip
+                    compact
+                    style={[styles.countChip, { backgroundColor: color + '18' }]}
+                    textStyle={{ color }}
+                  >
+                    {aggregate.count}
+                  </Chip>
                 </View>
-              ))}
-            </Card.Content>
-          </Card>
-        ))}
+
+                {/* Summary line */}
+                <Text variant="bodyMedium" style={{ color: '#555' }}>
+                  {aggregate.summary}
+                </Text>
+
+                {/* Contact list */}
+                {aggregate.contacts.length > 0 && (
+                  <View style={{ gap: 6, marginTop: 2 }}>
+                    {aggregate.contacts.map((contact) => (
+                      <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
+                        <View style={styles.contactRow}>
+                          <View style={[styles.miniDot, { backgroundColor: color }]} />
+                          <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
+                            {contact.name}
+                          </Text>
+                          <Text variant="bodySmall" style={{ color: '#999' }}>
+                            {formatDueLabel(contact.nextDueAt)}
+                          </Text>
+                        </View>
+                      </Link>
+                    ))}
+                  </View>
+                )}
+              </Card.Content>
+            </Card>
+          );
+        })}
       </View>
 
-      <Link href="/contact/new" asChild>
+      <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
         <Button mode="contained">Add a person</Button>
       </Link>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  miniDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  countChip: {
+    borderRadius: 12,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+});

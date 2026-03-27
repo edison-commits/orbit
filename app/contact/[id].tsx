@@ -16,16 +16,11 @@ import {
   formatOrbitDate,
   formatOrbitDateTime,
   getDaysUntilDate,
+  getDueColor,
 } from '@/lib/dates';
 import { SNOOZE_OPTIONS } from '@/lib/reminders';
 import { orbitTheme } from '@/lib/theme';
 import type { InteractionTimelineItem } from '@/types/models';
-
-const DUE_COLORS = {
-  overdue: '#C65B4B',
-  due: '#E07B39',
-  upcoming: '#5A9E7C',
-};
 
 const INTERACTION_ICONS: Record<string, string> = {
   call: 'phone',
@@ -35,10 +30,6 @@ const INTERACTION_ICONS: Record<string, string> = {
   birthday: 'cake',
   note: 'note-text',
 };
-
-function getDueColor(dueState: string): string {
-  return DUE_COLORS[dueState as keyof typeof DUE_COLORS] ?? orbitTheme.colors.primary;
-}
 
 function getDueIcon(dueState: string): string {
   if (dueState === 'overdue') return 'alert-circle';
