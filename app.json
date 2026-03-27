@@ -46,7 +46,8 @@
           "photosPermission": "Orbit accesses your photo library to add profile photos of your contacts.",
           "cameraPermission": "Orbit uses the camera to take profile photos of your contacts."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

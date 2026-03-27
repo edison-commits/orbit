@@ -1,11 +1,20 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ScrollView, View, StyleSheet, Alert, Linking } from 'react-native';
 import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
 import { settingsService } from '@/features/settings/settingsService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
 import { orbitTheme } from '@/lib/theme';
 import { feedbackRepository, Feedback, FeedbackType } from '@/db/repositories/feedbackRepository';
-import { createBackup, listBackups, restoreBackup } from '@/lib/backup';
+import {
+  createBackup,
+  listBackups,
+  restoreBackup,
+  isConfigured,
+  getServiceKey,
+  setServiceKey,
+  clearServiceKey,
+  testConnection,
+} from '@/lib/secureBackup';
 
 const CADENCE_LABELS: Record<number, string> = {
   7: '1 week',
@@ -36,17 +45,21 @@ export default function SettingsScreen() {
   const [defaultCadence, setDefaultCadence] = useState(settingsService.getDefaultCadence());
   const [isResetting, setIsResetting] = useState(false);
 
-  // Feedback state
-  const [feedbackType, setFeedbackType] = useState<FeedbackType>('feature');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedbackList, setFeedbackList] = useState<Feedback[]>(() => feedbackRepository.getAll());
-
   // Backup state
   const [backupList, setBackupList] = useState<{ name: string; created_at: string }[]>([]);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [showBackupList, setShowBackupList] = useState(false);
+  const [backupConfigured, setBackupConfigured] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [isSavingKey, setIsSavingKey] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+
+  // Feedback state
+  const [feedbackType, setFeedbackType] = useState<FeedbackType>('feature');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackList, setFeedbackList] = useState<Feedback[]>(() => feedbackRepository.getAll());
 
   function refreshFeedback() {
     setFeedbackList(feedbackRepository.getAll());
@@ -169,6 +182,68 @@ export default function SettingsScreen() {
       ],
     );
   }
+
+  async function handleSaveApiKey() {
+    const trimmed = apiKeyInput.trim();
+    if (!trimmed.startsWith('eyJ')) {
+      Alert.alert('Invalid key', 'The Supabase service role key should start with "eyJ..."');
+      return;
+    }
+    setIsSavingKey(true);
+    try {
+      await setServiceKey(trimmed);
+      setBackupConfigured(true);
+      setApiKeyInput('');
+      setConnectionStatus('idle');
+      const result = await testConnection();
+      setConnectionStatus(result.ok ? 'ok' : 'error');
+      Alert.alert('Saved', 'Your Supabase key has been saved securely on this device.');
+    } catch (e: unknown) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'Failed to save key');
+    } finally {
+      setIsSavingKey(false);
+    }
+  }
+
+  async function handleTestConnection() {
+    setConnectionStatus('idle');
+    const result = await testConnection();
+    setConnectionStatus(result.ok ? 'ok' : 'error');
+    if (result.ok) {
+      Alert.alert('Connected', 'Successfully connected to Supabase.');
+    } else {
+      Alert.alert('Connection failed', result.error ?? 'Could not connect.');
+    }
+  }
+
+  async function handleClearApiKey() {
+    Alert.alert('Remove API key?', 'You will need to re-enter it to use cloud backup.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          await clearServiceKey();
+          setBackupConfigured(false);
+          setConnectionStatus('idle');
+          setBackupList([]);
+          setShowBackupList(false);
+        },
+      },
+    ]);
+  }
+
+  // Load configured state on mount
+  useEffect(() => {
+    (async () => {
+      const configured = await isConfigured();
+      setBackupConfigured(configured);
+      if (configured) {
+        const result = await testConnection();
+        setConnectionStatus(result.ok ? 'ok' : 'error');
+      }
+    })();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
@@ -301,54 +376,99 @@ export default function SettingsScreen() {
       <Card>
         <Card.Content style={{ gap: 12 }}>
           <Text variant="titleMedium">☁️ Cloud Backup</Text>
-          <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
-            Export your contacts, interactions, and feedback to Supabase Storage. Restore anytime.
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button
-              mode="contained"
-              onPress={handleBackup}
-              loading={isBackingUp}
-              disabled={isBackingUp}
-              style={{ flex: 1 }}
-              icon="cloud-upload"
-            >
-              {isBackingUp ? 'Uploading…' : 'Backup now'}
-            </Button>
-            <Button
-              mode="outlined"
-              onPress={handleShowBackups}
-            >
-              {showBackupList ? 'Hide' : 'Restore'}
-            </Button>
-          </View>
 
-          {showBackupList && (
-            <View style={{ gap: 8, marginTop: 4 }}>
-              {backupList.length === 0 ? (
-                <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>No backups yet — tap "Backup now" to create one.</Text>
-              ) : (
-                backupList.map((b) => (
-                  <View key={b.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text variant="bodySmall">{b.name.replace('orbit_backup_', '').replace('.json', '')}</Text>
-                      <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
-                        {new Date(b.created_at).toLocaleDateString()}
-                      </Text>
-                    </View>
-                    <Button
-                      mode="text"
-                      compact
-                      loading={isRestoring}
-                      onPress={() => handleRestore(b.name)}
-                      disabled={isRestoring}
-                    >
-                      Restore
-                    </Button>
-                  </View>
-                ))
+          {!backupConfigured ? (
+            <>
+              <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
+                Enter your Supabase service role key to enable backup. Get it from: Project Settings → API → Service Role Secret.
+              </Text>
+              <TextInput
+                mode="outlined"
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                value={apiKeyInput}
+                onChangeText={setApiKeyInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+              />
+              <Button
+                mode="contained"
+                onPress={handleSaveApiKey}
+                loading={isSavingKey}
+                disabled={isSavingKey || !apiKeyInput.trim()}
+              >
+                Save key securely
+              </Button>
+              <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
+                Stored locally on this device only — never sent to any server except Supabase.
+              </Text>
+            </>
+          ) : (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {connectionStatus === 'ok' && (
+                  <Text variant="bodySmall" style={{ color: '#16a34a' }}>✅ Connected</Text>
+                )}
+                {connectionStatus === 'error' && (
+                  <Text variant="bodySmall" style={{ color: '#dc2626' }}>⚠️ Connection error — re-check key</Text>
+                )}
+                <View style={{ flex: 1 }} />
+                <Button mode="text" compact onPress={handleTestConnection}>
+                  Test
+                </Button>
+                <Button mode="text" compact textColor={orbitTheme.colors.error} onPress={handleClearApiKey}>
+                  Remove
+                </Button>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Button
+                  mode="contained"
+                  onPress={handleBackup}
+                  loading={isBackingUp}
+                  disabled={isBackingUp}
+                  style={{ flex: 1 }}
+                  icon="cloud-upload"
+                >
+                  {isBackingUp ? 'Uploading…' : 'Backup now'}
+                </Button>
+                <Button mode="outlined" onPress={handleShowBackups}>
+                  {showBackupList ? 'Hide' : 'Restore'}
+                </Button>
+              </View>
+
+              {showBackupList && (
+                <View style={{ gap: 8, marginTop: 4 }}>
+                  {backupList.length === 0 ? (
+                    <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>
+                      No backups yet — tap "Backup now" to create one.
+                    </Text>
+                  ) : (
+                    backupList.map((b) => (
+                      <View key={b.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text variant="bodySmall">
+                            {b.name.replace('orbit_backup_', '').replace('.json', '')}
+                          </Text>
+                          <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
+                            {b.created_at ? new Date(b.created_at).toLocaleDateString() : ''}
+                          </Text>
+                        </View>
+                        <Button
+                          mode="text"
+                          compact
+                          loading={isRestoring}
+                          onPress={() => handleRestore(b.name)}
+                          disabled={isRestoring}
+                        >
+                          Restore
+                        </Button>
+                      </View>
+                    ))
+                  )}
+                </View>
               )}
-            </View>
+            </>
           )}
         </Card.Content>
       </Card>
