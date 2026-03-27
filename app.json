@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Orbit",
+    "slug": "orbit",
+    "version": "1.0.0",
+    "scheme": "orbit",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FCF7F3"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.orbit.app"
+    },
+    "android": {
+      "package": "com.orbit.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FCF7F3",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7C5CFC"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "cooprCoep": true
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4a652d2b-8179-421d-882b-b881b43423ec"
+      }
+    },
+    "owner": "edisonclaw"
+  }
+}
