@@ -28,8 +28,6 @@ export default function PeopleScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <Text variant="headlineSmall">People</Text>
-
       {/* Search */}
       <Searchbar
         placeholder="Search by name…"

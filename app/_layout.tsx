@@ -64,7 +64,20 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={orbitTheme}>
-      <Stack screenOptions={{ headerTitleAlign: 'center' }}>
+      <Stack
+        screenOptions={{
+          headerTitleAlign: 'left',
+          headerStyle: {
+            backgroundColor: orbitTheme.colors.primary,
+          },
+          headerTitleStyle: {
+            color: '#FFFFFF',
+            fontWeight: '700' as const,
+            fontSize: 18,
+          },
+          headerTintColor: '#FFFFFF',
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="contact/new" options={{ title: 'New person' }} />
         <Stack.Screen name="contact/[id]" options={{ title: 'Person' }} />

@@ -8,9 +8,9 @@ export const orbitTheme: MD3Theme = {
     primary: '#7C5CFC',
     onPrimary: '#FFFFFF',
     secondary: '#F4B183',
-    background: '#FCF7F3',
+    background: '#F7F5FF',      // subtle lavender tint
     surface: '#FFFFFF',
-    surfaceVariant: '#F6EEE8',
+    surfaceVariant: '#EDE9FE', // soft purple tint for card chips
     outline: '#D8CBBF',
     error: '#C65B4B',
   },

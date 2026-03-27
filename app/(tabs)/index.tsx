@@ -23,8 +23,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <Text variant="headlineSmall">Home</Text>
-      <Text variant="bodyMedium" style={{ color: '#666', marginTop: -8 }}>
+      <Text variant="bodyMedium" style={{ color: '#666' }}>
         Who needs you — now, today, and soon.
       </Text>
 
