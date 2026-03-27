@@ -28,7 +28,7 @@ export function buildContactDraft(input: Partial<Contact>) {
   });
 }
 
-export async function createContact(input: Pick<Contact, 'name' | 'nickname' | 'relationshipType' | 'cadence' | 'notes'>) {
+export async function createContact(input: Pick<Contact, 'name' | 'nickname' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null }) {
   const draft = buildContactDraft({
     name: input.name,
     nickname: input.nickname,
@@ -44,6 +44,10 @@ export async function createContact(input: Pick<Contact, 'name' | 'nickname' | '
     nickname: draft.nickname,
     relationshipType: draft.relationshipType,
     notes: draft.notes,
+    birthday: input.birthday ?? null,
+    phone: input.phone ?? null,
+    email: input.email ?? null,
+    socialJson: input.socialJson ?? null,
     cadence: draft.cadence,
     createdAt: now,
     updatedAt: now,
@@ -53,7 +57,7 @@ export async function createContact(input: Pick<Contact, 'name' | 'nickname' | '
   return contact;
 }
 
-export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickname' | 'relationshipType' | 'cadence' | 'notes'>) {
+export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickname' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null }) {
   const draft = buildContactDraft({
     id: input.id,
     name: input.name,
@@ -69,6 +73,10 @@ export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickna
     nickname: draft.nickname,
     relationshipType: draft.relationshipType,
     notes: draft.notes,
+    birthday: input.birthday ?? null,
+    phone: input.phone ?? null,
+    email: input.email ?? null,
+    socialJson: input.socialJson ?? null,
     cadence: draft.cadence,
     updatedAt: toIsoNow(),
   });

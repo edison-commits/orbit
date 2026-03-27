@@ -17,6 +17,10 @@ export interface CreateContactRecord {
   nickname?: string | null;
   relationshipType: string;
   notes?: string | null;
+  birthday?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  socialJson?: string | null;
   cadence: number;
   lastInteractionAt?: string | null;
   createdAt: string;
@@ -29,6 +33,10 @@ export interface UpdateContactRecord {
   nickname?: string | null;
   relationshipType: string;
   notes?: string | null;
+  birthday?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  socialJson?: string | null;
   cadence: number;
   updatedAt: string;
 }
@@ -144,19 +152,27 @@ export const contactsRepository = {
         nickname,
         relationship_type,
         notes,
+        birthday,
+        phone,
+        email,
+        social_json,
         cadence,
         last_interaction_at,
         next_due_at,
         due_state,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         input.id,
         input.name,
         input.nickname ?? null,
         input.relationshipType,
         input.notes ?? null,
+        input.birthday ?? null,
+        input.phone ?? null,
+        input.email ?? null,
+        input.socialJson ?? null,
         input.cadence,
         input.lastInteractionAt ?? null,
         nextDueAt,
@@ -205,6 +221,10 @@ export const contactsRepository = {
            nickname = ?,
            relationship_type = ?,
            notes = ?,
+           birthday = ?,
+           phone = ?,
+           email = ?,
+           social_json = ?,
            cadence = ?,
            next_due_at = ?,
            due_state = ?,
@@ -215,6 +235,10 @@ export const contactsRepository = {
         input.nickname ?? null,
         input.relationshipType,
         input.notes ?? null,
+        input.birthday ?? null,
+        input.phone ?? null,
+        input.email ?? null,
+        input.socialJson ?? null,
         input.cadence,
         nextDueAt,
         dueState,

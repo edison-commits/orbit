@@ -14,6 +14,7 @@ export interface Contact {
   location?: string | null;
   phone?: string | null;
   email?: string | null;
+  socialJson?: string | null;
   notes?: string | null;
   tagsJson?: string | null;
   cadence: number;

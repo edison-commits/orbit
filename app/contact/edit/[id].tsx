@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
+import type { Contact } from '@/types/models';
+import { BirthdayPicker } from '@/components/BirthdayPicker';
+
+type SocialData = {
+  instagram?: string;
+  twitter?: string;
+  linkedin?: string;
+};
 
 export default function EditContactScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [contact, setContact] = useState(() => contactsRepository.getById(id));
+  const [contact, setContact] = useState<Contact | null>(() => contactsRepository.getById(id));
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
   const [relationshipType, setRelationshipType] = useState('friend');
   const [cadence, setCadence] = useState<number>(30);
   const [notes, setNotes] = useState('');
@@ -30,6 +44,19 @@ export default function EditContactScreen() {
     setRelationshipType(contact.relationshipType);
     setCadence(contact.cadence);
     setNotes(contact.notes ?? '');
+    setPhone(contact.phone ?? '');
+    setEmail(contact.email ?? '');
+    setBirthday(contact.birthday ?? '');
+    try {
+      const social: SocialData = contact.socialJson ? JSON.parse(contact.socialJson) : {};
+      setInstagram(social.instagram ?? '');
+      setTwitter(social.twitter ?? '');
+      setLinkedin(social.linkedin ?? '');
+    } catch {
+      setInstagram('');
+      setTwitter('');
+      setLinkedin('');
+    }
   }, [contact]);
 
   async function handleSave() {
@@ -38,6 +65,12 @@ export default function EditContactScreen() {
     try {
       setIsSaving(true);
       setError(null);
+
+      const social: SocialData = {};
+      if (instagram) social.instagram = instagram;
+      if (twitter) social.twitter = twitter;
+      if (linkedin) social.linkedin = linkedin;
+
       await updateContact({
         id: contact.id,
         name,
@@ -45,6 +78,10 @@ export default function EditContactScreen() {
         relationshipType,
         cadence,
         notes: notes || null,
+        birthday: birthday || null,
+        phone: phone || null,
+        email: email || null,
+        socialJson: Object.keys(social).length > 0 ? JSON.stringify(social) : null,
       });
       router.replace(`/contact/${contact.id}`);
     } catch (err) {
@@ -76,6 +113,65 @@ export default function EditContactScreen() {
           ))}
         </View>
       </View>
+
+      <Divider />
+
+      <Text variant="titleMedium">Contact details</Text>
+
+      <View style={{ gap: 12 }}>
+        <TextInput
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          placeholder="+1 (555) 000-0000"
+        />
+        <TextInput
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholder="name@example.com"
+        />
+        <BirthdayPicker value={birthday} onChange={setBirthday} />
+      </View>
+
+      <Divider />
+
+      <Text variant="titleMedium">Social</Text>
+      <Text variant="bodySmall" style={{ color: '#888', marginTop: -8 }}>
+        Optional — how you actually keep up with them
+      </Text>
+
+      <View style={{ gap: 12 }}>
+        <TextInput
+          label="Instagram"
+          value={instagram}
+          onChangeText={setInstagram}
+          autoCapitalize="none"
+          placeholder="@username"
+          left={<TextInput.Icon icon="instagram" />}
+        />
+        <TextInput
+          label="X (Twitter)"
+          value={twitter}
+          onChangeText={setTwitter}
+          autoCapitalize="none"
+          placeholder="@username"
+          left={<TextInput.Icon icon="twitter" />}
+        />
+        <TextInput
+          label="LinkedIn"
+          value={linkedin}
+          onChangeText={setLinkedin}
+          autoCapitalize="none"
+          placeholder="username"
+          left={<TextInput.Icon icon="linkedin" />}
+        />
+      </View>
+
+      <Divider />
 
       <View style={{ gap: 8 }}>
         <Text variant="titleMedium">Cadence</Text>
