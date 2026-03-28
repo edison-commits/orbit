@@ -124,9 +124,11 @@ export default function PeopleScreen() {
         ))
       )}
 
-      <Link href="/interaction/new" asChild>
-        <Button mode="outlined">Quick log interaction</Button>
-      </Link>
+      {contacts.length > 0 && (
+        <Link href="/interaction/new" asChild>
+          <Button mode="outlined">Quick log interaction</Button>
+        </Link>
+      )}
     </ScrollView>
   );
 }

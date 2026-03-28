@@ -115,8 +115,6 @@ export default function ContactDetailScreen() {
     return <Text style={{ padding: 16 }}>Contact not found.</Text>;
   }
 
-  // DEBUG
-  console.log('CONTACT DEBUG:', JSON.stringify({ phone: contact.phone, email: contact.email, birthday: contact.birthday, socialJson: contact.socialJson }, null, 2));
 
   const dueColor = getDueColor(contact.dueState);
   const dueDays = getDaysUntilDate(contact.nextDueAt);
@@ -256,15 +254,15 @@ export default function ContactDetailScreen() {
 
           const openSocial = (platform: string, handle: string) => {
             const clean = handle.replace('@', '').trim();
-            const urls: Record<string, string> = {
+            const deepUrls: Record<string, string> = {
               instagram: `instagram://user?username=${clean}`,
               twitter: `https://x.com/${clean}`,
               linkedin: `https://linkedin.com/in/${clean}`,
             };
-            const url = urls[platform] ?? `https://${platform}.com/${clean}`;
-            Linking.openURL(url).catch(() => {
-              // Fallback to web URL if app not installed
-              Linking.openURL(`https://${platform}.com/${clean}`);
+            const webUrl = `https://${platform}.com/${clean}`;
+            const preferred = deepUrls[platform] ?? webUrl;
+            Linking.openURL(preferred).catch(() => {
+              Linking.openURL(webUrl);
             });
           };
 

@@ -62,9 +62,20 @@
 
 ---
 
-## 2026-03-27 — App Store Submission
+## 2026-03-28 — App Store Submission
 
-**Status:** Paused — Apple Developer Program enrollment pending (~24h). Reminder set for 2026-03-28 9 AM PDT.
+**Status:** Apple Developer Program enrollment should be active now (~24h since signup on 2026-03-27).
+
+**Next steps (requires London):**
+1. Check developer.apple.com — enrollment should be active
+2. Create App Store Connect API key: developer.apple.com → Account → Keys → App Store Connect API → Create key
+3. Upload key to Expo: expo.dev → Orbit → Access Keys → Add App Store Connect API Key
+4. Run: `eas submit --platform ios --latest --auto-submit`
+
+**Domain:** `orbitcontacts.app` registered on Cloudflare ✅
+- Landing page deployed to: `https://orbit-landing-co3.pages.dev` ✅
+- Custom domain waiting on manual setup in Cloudflare dashboard (Pages → orbit-landing → Custom domains → Add orbitcontacts.app)
+- Privacy policy URL for App Store: `https://orbitcontacts.app/privacy` (live once domain is wired)
 
 **What's needed:**
 1. Apple Developer Program membership ($99/year) — is London a member?

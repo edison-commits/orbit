@@ -4,6 +4,7 @@ import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndic
 import { settingsService } from '@/features/settings/settingsService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
 import { orbitTheme } from '@/lib/theme';
+import { useUiStore, type ThemeMode } from '@/store/ui';
 import { feedbackRepository, Feedback, FeedbackType } from '@/db/repositories/feedbackRepository';
 import {
   createBackup,
@@ -44,6 +45,8 @@ function timeAgo(dateStr: string): string {
 export default function SettingsScreen() {
   const [defaultCadence, setDefaultCadence] = useState(settingsService.getDefaultCadence());
   const [isResetting, setIsResetting] = useState(false);
+  const themeMode = useUiStore((s) => s.themeMode);
+  const setThemeMode = useUiStore((s) => s.setThemeMode);
 
   // Backup state
   const [backupList, setBackupList] = useState<{ name: string; created_at: string }[]>([]);
@@ -264,6 +267,27 @@ export default function SettingsScreen() {
                 textStyle={defaultCadence === days ? { color: orbitTheme.colors.onPrimaryContainer } : {}}
               >
                 {CADENCE_LABELS[days] ?? `${days} days`}
+              </Chip>
+            ))}
+          </View>
+        </Card.Content>
+      </Card>
+
+      {/* Appearance */}
+      <Card>
+        <Card.Content style={{ gap: 12 }}>
+          <Text variant="titleMedium">Appearance</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {(['system', 'light', 'dark'] as ThemeMode[]).map((mode) => (
+              <Chip
+                key={mode}
+                selected={themeMode === mode}
+                onPress={() => setThemeMode(mode)}
+                style={themeMode === mode ? { backgroundColor: orbitTheme.colors.primaryContainer } : {}}
+                textStyle={themeMode === mode ? { color: orbitTheme.colors.onPrimaryContainer } : {}}
+                icon={mode === 'system' ? 'theme-light-dark' : mode === 'light' ? 'white-balance-sunny' : 'moon-waning-crescent'}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
               </Chip>
             ))}
           </View>

@@ -14,7 +14,8 @@ const getDaysInMonth = (month: number, year: number) => {
 };
 
 const currentYear = new Date().getFullYear();
-const YEARS = Array.from({ length: 100 }, (_, i) => currentYear - i);
+const START_YEAR = 1900;
+const YEARS = Array.from({ length: currentYear - START_YEAR + 1 }, (_, i) => currentYear - i);
 
 interface BirthdayPickerProps {
   value: string;

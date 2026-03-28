@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { ActivityIndicator, View, Text } from 'react-native';
+import { ActivityIndicator, View, Text, useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { runMigrations } from '@/db/client';
 import { seedDevData } from '@/db/repositories/devSeed';
 import { reminderService } from '@/features/reminders/reminderService';
-import { orbitTheme } from '@/lib/theme';
+import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
+import { useUiStore } from '@/store/ui';
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const systemColorScheme = useColorScheme();
+  const themeMode = useUiStore((s) => s.themeMode);
+
+  const isDark =
+    themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
+  const activeTheme = isDark ? orbitDarkTheme : orbitTheme;
 
   useEffect(() => {
     reminderService.configure();
@@ -44,7 +51,7 @@ export default function RootLayout() {
 
   if (initError) {
     return (
-      <PaperProvider theme={orbitTheme}>
+      <PaperProvider theme={activeTheme}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <Text style={{ color: '#888', fontSize: 14, textAlign: 'center' }}>{initError}</Text>
         </View>
@@ -54,7 +61,7 @@ export default function RootLayout() {
 
   if (!isReady) {
     return (
-      <PaperProvider theme={orbitTheme}>
+      <PaperProvider theme={activeTheme}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator />
         </View>
@@ -63,19 +70,19 @@ export default function RootLayout() {
   }
 
   return (
-    <PaperProvider theme={orbitTheme}>
+    <PaperProvider theme={activeTheme}>
       <Stack
         screenOptions={{
           headerTitleAlign: 'left',
           headerStyle: {
-            backgroundColor: orbitTheme.colors.primary,
+            backgroundColor: activeTheme.colors.primary,
           },
           headerTitleStyle: {
-            color: '#FFFFFF',
+            color: activeTheme.colors.onPrimary,
             fontWeight: '700' as const,
             fontSize: 18,
           },
-          headerTintColor: '#FFFFFF',
+          headerTintColor: activeTheme.colors.onPrimary,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

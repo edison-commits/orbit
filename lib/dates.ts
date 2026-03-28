@@ -101,7 +101,7 @@ export function formatBirthday(value: string | null | undefined): string {
     const birthDate = new Date(value + 'T00:00:00');
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getFullYear())) age--;
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     if (age > 0) return `${monthDay} · ${age} years old`;
   }
   return monthDay;
