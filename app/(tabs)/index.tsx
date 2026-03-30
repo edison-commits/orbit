@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, StyleSheet } from 'react-native';
-import { Button, Card, Chip, Text } from 'react-native-paper';
+import { Button, Card, Chip, Text, Icon } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
-import { formatDueLabel, getDueColor } from '@/lib/dates';
+import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
 
 const SECTION_LABELS: Record<string, string> = {
@@ -56,15 +56,22 @@ export default function HomeScreen() {
 
       <View style={{ gap: 12 }}>
         {aggregates.map((aggregate) => {
-          const color = getDueColor(aggregate.dueState);
+          const isBirthday = aggregate.dueState === 'birthday';
+          const color = isBirthday ? '#EC4899' : getDueColor(aggregate.dueState);
+          const label = isBirthday ? aggregate.title : (SECTION_LABELS[aggregate.dueState] ?? aggregate.dueState);
+
           return (
             <Card key={aggregate.dueState}>
               <Card.Content style={{ gap: 10 }}>
                 {/* Header row */}
                 <View style={styles.header}>
                   <View style={styles.labelRow}>
-                    <View style={[styles.dot, { backgroundColor: color }]} />
-                    <Text variant="titleMedium">{SECTION_LABELS[aggregate.dueState] ?? aggregate.dueState}</Text>
+                    {isBirthday ? (
+                      <Icon source="cake-variant" size={18} color={color} />
+                    ) : (
+                      <View style={[styles.dot, { backgroundColor: color }]} />
+                    )}
+                    <Text variant="titleMedium">{label}</Text>
                   </View>
                   <Chip
                     compact
@@ -83,19 +90,34 @@ export default function HomeScreen() {
                 {/* Contact list */}
                 {aggregate.contacts.length > 0 && (
                   <View style={{ gap: 6, marginTop: 2 }}>
-                    {aggregate.contacts.map((contact) => (
-                      <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
-                        <View style={styles.contactRow}>
-                          <View style={[styles.miniDot, { backgroundColor: color }]} />
-                          <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
-                            {contact.name}
-                          </Text>
-                          <Text variant="bodySmall" style={{ color: '#999' }}>
-                            {formatDueLabel(contact.nextDueAt)}
-                          </Text>
-                        </View>
-                      </Link>
-                    ))}
+                    {aggregate.contacts.map((contact) => {
+                      const birthdayDays = isBirthday && 'birthdayDays' in contact
+                        ? (contact as any).birthdayDays
+                        : null;
+                      return (
+                        <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
+                          <View style={styles.contactRow}>
+                            {isBirthday ? (
+                              <Icon source="cake-variant" size={14} color={color} style={{ marginTop: 1 }} />
+                            ) : (
+                              <View style={[styles.miniDot, { backgroundColor: color }]} />
+                            )}
+                            <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
+                              {contact.name}
+                            </Text>
+                            {birthdayDays !== null ? (
+                              <Text variant="bodySmall" style={{ color: '#999' }}>
+                                {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
+                              </Text>
+                            ) : (
+                              <Text variant="bodySmall" style={{ color: '#999' }}>
+                                {formatDueLabel(contact.nextDueAt)}
+                              </Text>
+                            )}
+                          </View>
+                        </Link>
+                      );
+                    })}
                   </View>
                 )}
               </Card.Content>

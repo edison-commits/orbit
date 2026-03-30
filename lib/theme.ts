@@ -39,4 +39,5 @@ export const DUE_COLORS = {
   upcoming: '#6FCF97', // green
   paused:   '#9CA3AF', // gray
   snoozed:  '#9CA3AF', // gray
+  birthday: '#EC4899', // pink
 } as const;
