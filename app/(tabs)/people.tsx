@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, Image, StyleSheet } from 'react-native';
-import { Button, Card, Chip, Searchbar, Text, Surface } from 'react-native-paper';
+import { Button, Card, Chip, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
 import { useUiStore } from '@/store/ui';
-import { orbitTheme, DUE_COLORS } from '@/lib/theme';
+import { DUE_COLORS } from '@/lib/theme';
 import { getDueColor } from '@/lib/dates';
 
 export default function PeopleScreen() {
@@ -13,6 +13,7 @@ export default function PeopleScreen() {
   const setDueFilter = useUiStore((state) => state.setDueFilter);
   const [contacts, setContacts] = useState(() => contactsRepository.listByUrgency());
   const [search, setSearch] = useState('');
+  const { colors } = useTheme();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +48,7 @@ export default function PeopleScreen() {
             style={dueFilter === filter ? { backgroundColor: getDueColor(filter === 'all' ? 'upcoming' : filter) + '22' } : {}}
             textStyle={dueFilter === filter ? { color: getDueColor(filter === 'all' ? 'upcoming' : filter) } : {}}
           >
-            {filter}
+            {filter === 'all' ? 'All' : filter[0].toUpperCase() + filter.slice(1)}
           </Chip>
         ))}
       </View>
@@ -57,7 +58,7 @@ export default function PeopleScreen() {
         <Card>
           <Card.Content style={{ gap: 8 }}>
             <Text variant="titleMedium">{search ? 'No matches' : 'No people yet'}</Text>
-            <Text variant="bodyMedium" style={{ color: '#666' }}>
+            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
               {search
                 ? `Nobody named "${search}" in your orbit.`
                 : 'Add the people you want to stay connected with.'}
@@ -91,7 +92,7 @@ export default function PeopleScreen() {
                 {contact.photoUri ? (
                   <Image source={{ uri: contact.photoUri }} style={styles.avatar} />
                 ) : (
-                  <Surface style={[styles.avatar, { backgroundColor: orbitTheme.colors.primary }]} elevation={1}>
+                  <Surface style={[styles.avatar, { backgroundColor: colors.primary }]} elevation={1}>
                     <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
                   </Surface>
                 )}
@@ -100,7 +101,7 @@ export default function PeopleScreen() {
                   <Text variant="titleMedium" numberOfLines={1}>
                     {contact.name}
                   </Text>
-                  <Text variant="bodySmall" style={{ color: '#888' }}>
+                  <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                     {formatDueLabel(contact.nextDueAt)}
                     {contact.lastInteractionAt ? ` · ${formatDaysAgo(contact.lastInteractionAt)}` : ''}
                   </Text>
@@ -135,7 +136,6 @@ export default function PeopleScreen() {
 
 const styles = StyleSheet.create({
   searchbar: {
-    backgroundColor: '#FAFAFA',
     elevation: 0,
   },
   cardContent: {
@@ -175,6 +175,5 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   stateChip: {
-    backgroundColor: '#F3F4F6',
   },
 });

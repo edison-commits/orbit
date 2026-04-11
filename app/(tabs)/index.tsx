@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, StyleSheet } from 'react-native';
-import { Button, Card, Chip, Text, Icon } from 'react-native-paper';
+import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
 import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
@@ -13,6 +13,7 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const [aggregates, setAggregates] = useState(() => getHomeAggregates());
 
   useFocusEffect(
@@ -26,7 +27,7 @@ export default function HomeScreen() {
   if (totalContacts === 0) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <Text variant="bodyMedium" style={{ color: '#666' }}>
+        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
           Who needs you — now, today, and soon.
         </Text>
         <Card>
@@ -34,7 +35,7 @@ export default function HomeScreen() {
             <Text variant="headlineSmall" style={{ textAlign: 'center' }}>
               Your orbit is empty
             </Text>
-            <Text variant="bodyMedium" style={{ textAlign: 'center', color: '#666', maxWidth: 260 }}>
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: colors.onSurfaceVariant, maxWidth: 260 }}>
               Add the people you want to stay connected with. Orbit handles the rest.
             </Text>
             <Link href="/contact/new" asChild>
@@ -50,7 +51,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <Text variant="bodyMedium" style={{ color: '#666' }}>
+      <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         Who needs you — now, today, and soon.
       </Text>
 
@@ -83,7 +84,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Summary line */}
-                <Text variant="bodyMedium" style={{ color: '#555' }}>
+                <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
                   {aggregate.summary}
                 </Text>
 
@@ -106,11 +107,11 @@ export default function HomeScreen() {
                               {contact.name}
                             </Text>
                             {birthdayDays !== null ? (
-                              <Text variant="bodySmall" style={{ color: '#999' }}>
+                              <Text variant="bodySmall" style={{ color: colors.outline }}>
                                 {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
                               </Text>
                             ) : (
-                              <Text variant="bodySmall" style={{ color: '#999' }}>
+                              <Text variant="bodySmall" style={{ color: colors.outline }}>
                                 {formatDueLabel(contact.nextDueAt)}
                               </Text>
                             )}
