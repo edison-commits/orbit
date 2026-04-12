@@ -53,7 +53,7 @@ export default function RootLayout() {
     return (
       <PaperProvider theme={activeTheme}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <Text style={{ color: '#888', fontSize: 14, textAlign: 'center' }}>{initError}</Text>
+          <Text style={{ color: activeTheme.colors.onSurfaceVariant, fontSize: 14, textAlign: 'center' }}>{initError}</Text>
         </View>
       </PaperProvider>
     );

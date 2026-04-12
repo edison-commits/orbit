@@ -3,7 +3,6 @@ import { ScrollView, View, StyleSheet, Alert, Linking } from 'react-native';
 import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
 import { settingsService } from '@/features/settings/settingsService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
-import { orbitTheme } from '@/lib/theme';
 import { useUiStore, type ThemeMode } from '@/store/ui';
 import { feedbackRepository, Feedback, FeedbackType } from '@/db/repositories/feedbackRepository';
 import {
@@ -47,6 +46,7 @@ export default function SettingsScreen() {
   const [isResetting, setIsResetting] = useState(false);
   const themeMode = useUiStore((s) => s.themeMode);
   const setThemeMode = useUiStore((s) => s.setThemeMode);
+  const { colors: themeColors } = useTheme();
 
   // Backup state
   const [backupList, setBackupList] = useState<{ name: string; created_at: string }[]>([]);
@@ -254,7 +254,7 @@ export default function SettingsScreen() {
       <Card>
         <Card.Content style={{ gap: 12 }}>
           <Text variant="titleMedium">Default check-in cadence</Text>
-          <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
+          <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: -6 }}>
             Used as the starting value when adding a new person.
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -263,8 +263,8 @@ export default function SettingsScreen() {
                 key={days}
                 selected={defaultCadence === days}
                 onPress={() => handleCadenceChange(days)}
-                style={defaultCadence === days ? { backgroundColor: orbitTheme.colors.primaryContainer } : {}}
-                textStyle={defaultCadence === days ? { color: orbitTheme.colors.onPrimaryContainer } : {}}
+                style={defaultCadence === days ? { backgroundColor: themeColors.primaryContainer } : {}}
+                textStyle={defaultCadence === days ? { color: themeColors.onPrimaryContainer } : {}}
               >
                 {CADENCE_LABELS[days] ?? `${days} days`}
               </Chip>
@@ -283,8 +283,8 @@ export default function SettingsScreen() {
                 key={mode}
                 selected={themeMode === mode}
                 onPress={() => setThemeMode(mode)}
-                style={themeMode === mode ? { backgroundColor: orbitTheme.colors.primaryContainer } : {}}
-                textStyle={themeMode === mode ? { color: orbitTheme.colors.onPrimaryContainer } : {}}
+                style={themeMode === mode ? { backgroundColor: themeColors.primaryContainer } : {}}
+                textStyle={themeMode === mode ? { color: themeColors.onPrimaryContainer } : {}}
                 icon={mode === 'system' ? 'theme-light-dark' : mode === 'light' ? 'white-balance-sunny' : 'moon-waning-crescent'}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -298,7 +298,7 @@ export default function SettingsScreen() {
       <Card>
         <Card.Content style={{ gap: 12 }}>
           <Text variant="titleMedium">Feedback &amp; Features</Text>
-          <Text variant="bodySmall" style={{ color: '#666', marginTop: -6 }}>
+          <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: -6 }}>
             Found a bug or want something new? Let us know below.
           </Text>
 
@@ -309,8 +309,8 @@ export default function SettingsScreen() {
                 key={t.value}
                 selected={feedbackType === t.value}
                 onPress={() => setFeedbackType(t.value)}
-                style={feedbackType === t.value ? { backgroundColor: orbitTheme.colors.primaryContainer } : {}}
-                textStyle={feedbackType === t.value ? { color: orbitTheme.colors.onPrimaryContainer } : {}}
+                style={feedbackType === t.value ? { backgroundColor: themeColors.primaryContainer } : {}}
+                textStyle={feedbackType === t.value ? { color: themeColors.onPrimaryContainer } : {}}
               >
                 {t.label}
               </Chip>
@@ -370,15 +370,15 @@ export default function SettingsScreen() {
                   gap: 8,
                   paddingVertical: 8,
                   borderBottomWidth: StyleSheet.hairlineWidth,
-                  borderBottomColor: '#E5E7EB',
+                  borderBottomColor: themeColors.outlineVariant,
                 }}
               >
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text variant="labelSmall" style={{ color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <Text variant="labelSmall" style={{ color: themeColors.outline, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {item.type}
                     </Text>
-                    <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>
+                    <Text variant="bodySmall" style={{ color: themeColors.outline }}>
                       {timeAgo(item.created_at)}
                     </Text>
                   </View>
@@ -401,17 +401,17 @@ export default function SettingsScreen() {
         <Card.Content style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text variant="titleMedium">☁️ Cloud Backup</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: orbitTheme.colors.primaryContainer, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-              <Text variant="labelSmall" style={{ color: orbitTheme.colors.onPrimaryContainer, fontWeight: '700', letterSpacing: 0.5 }}>PRO</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: themeColors.primaryContainer, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+              <Text variant="labelSmall" style={{ color: themeColors.onPrimaryContainer, fontWeight: '700', letterSpacing: 0.5 }}>PRO</Text>
             </View>
           </View>
 
           {!backupConfigured ? (
             <>
               {/* Pro upsell banner */}
-              <View style={{ backgroundColor: orbitTheme.colors.primaryContainer, borderRadius: 12, padding: 12 }}>
+              <View style={{ backgroundColor: themeColors.primaryContainer, borderRadius: 12, padding: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text variant="bodyMedium" style={{ fontWeight: '600', color: orbitTheme.colors.onPrimaryContainer, flex: 1 }}>
+                  <Text variant="bodyMedium" style={{ fontWeight: '600', color: themeColors.onPrimaryContainer, flex: 1 }}>
                     Try Pro free for 30 days
                   </Text>
                   <Button
@@ -424,7 +424,7 @@ export default function SettingsScreen() {
                         [{ text: 'Got it' }],
                       )
                     }
-                    style={{ backgroundColor: orbitTheme.colors.primary }}
+                    style={{ backgroundColor: themeColors.primary }}
                     labelStyle={{ fontSize: 12 }}
                   >
                     Learn more
@@ -432,7 +432,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              <Text variant="bodySmall" style={{ color: '#666', marginTop: 4 }}>
+              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: 4 }}>
                 Enter your Supabase service role key to activate Pro. Your key is stored securely on this device only.
               </Text>
               <TextInput
@@ -452,20 +452,20 @@ export default function SettingsScreen() {
               >
                 Start 30-day free trial
               </Button>
-              <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
+              <Text variant="labelSmall" style={{ color: themeColors.outline }}>
                 Stored locally on this device only — never sent to any server except Supabase.
               </Text>
             </>
           ) : (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text variant="labelMedium" style={{ color: '#16a34a', fontWeight: '600' }}>✅ Pro active</Text>
-                <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>· 30 days free</Text>
+                <Text variant="labelMedium" style={{ color: '#4ade80', fontWeight: '600' }}>✅ Pro active</Text>
+                <Text variant="bodySmall" style={{ color: themeColors.outline }}>· 30 days free</Text>
                 <View style={{ flex: 1 }} />
                 <Button mode="text" compact onPress={handleTestConnection}>
                   Test
                 </Button>
-                <Button mode="text" compact textColor={orbitTheme.colors.error} onPress={handleClearApiKey}>
+                <Button mode="text" compact textColor={themeColors.error} onPress={handleClearApiKey}>
                   Remove
                 </Button>
               </View>
@@ -489,7 +489,7 @@ export default function SettingsScreen() {
               {showBackupList && (
                 <View style={{ gap: 8, marginTop: 4 }}>
                   {backupList.length === 0 ? (
-                    <Text variant="bodySmall" style={{ color: '#9CA3AF' }}>
+                    <Text variant="bodySmall" style={{ color: themeColors.outline }}>
                       No backups yet — tap "Backup now" to create one.
                     </Text>
                   ) : (
@@ -499,7 +499,7 @@ export default function SettingsScreen() {
                           <Text variant="bodySmall">
                             {b.name.replace('orbit_backup_', '').replace('.json', '')}
                           </Text>
-                          <Text variant="labelSmall" style={{ color: '#9CA3AF' }}>
+                          <Text variant="labelSmall" style={{ color: themeColors.outline }}>
                             {b.created_at ? new Date(b.created_at).toLocaleDateString() : ''}
                           </Text>
                         </View>
@@ -526,14 +526,14 @@ export default function SettingsScreen() {
       <Card>
         <Card.Content style={{ gap: 12 }}>
           <Text variant="titleMedium">Data</Text>
-          <Text variant="bodySmall" style={{ color: '#666' }}>
+          <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
             All your data lives on this device. Resetting clears everything — contacts, interaction history, and settings.
           </Text>
           <Button
             mode="outlined"
             icon="delete-outline"
-            textColor={orbitTheme.colors.error}
-            style={{ borderColor: orbitTheme.colors.error }}
+            textColor={themeColors.error}
+            style={{ borderColor: themeColors.error }}
             onPress={handleResetData}
             loading={isResetting}
           >
@@ -546,7 +546,7 @@ export default function SettingsScreen() {
       <Card>
         <Card.Content style={{ gap: 8 }}>
           <Text variant="titleMedium">About Orbit</Text>
-          <Text variant="bodySmall" style={{ color: '#666' }}>
+          <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
             Version 1.0.0{'\n'}
             Your data is stored locally on this device. Use Cloud Backup in Settings to export to Supabase.
           </Text>
