@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useLocalSearchParams, Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, StyleSheet, Linking, Pressable, Image } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, Surface, Icon } from 'react-native-paper';
+import { Button, Chip, Divider, HelperText, Text, Surface, Icon, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { interactionsRepository } from '@/db/repositories/interactionsRepository';
 import {
@@ -21,7 +21,6 @@ import {
   getDaysUntilBirthday,
 } from '@/lib/dates';
 import { SNOOZE_OPTIONS } from '@/lib/reminders';
-import { orbitTheme } from '@/lib/theme';
 import type { InteractionTimelineItem } from '@/types/models';
 
 const INTERACTION_ICONS: Record<string, string> = {
@@ -40,6 +39,7 @@ function getDueIcon(dueState: string): string {
 }
 
 export default function ContactDetailScreen() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [contact, setContact] = useState(() => contactsRepository.getById(id));
   const [recentInteractions, setRecentInteractions] = useState<InteractionTimelineItem[]>(() =>
@@ -128,7 +128,7 @@ export default function ContactDetailScreen() {
           {contact.photoUri ? (
             <Image source={{ uri: contact.photoUri }} style={styles.avatarPhoto} />
           ) : (
-            <Surface style={[styles.avatar, { backgroundColor: orbitTheme.colors.primary }]} elevation={1}>
+            <Surface style={[styles.avatar, { backgroundColor: colors.primary }]} elevation={1}>
               <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
             </Surface>
           )}
@@ -137,28 +137,28 @@ export default function ContactDetailScreen() {
               {contact.name}
             </Text>
             {contact.nickname ? (
-              <Text variant="bodyMedium" style={{ color: '#888' }}>
+              <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
                 {contact.nickname}
               </Text>
             ) : null}
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
-          <Chip compact style={{ backgroundColor: orbitTheme.colors.surfaceVariant }}>
+          <Chip compact style={{ backgroundColor: colors.surfaceVariant }}>
             {contact.relationshipType}
           </Chip>
           {contact.cadenceSnoozedUntil ? (
-            <Chip compact icon="clock-outline" style={{ backgroundColor: '#FEF3C7' }}>
+            <Chip compact icon="clock-outline" style={{ backgroundColor: colors.tertiaryContainer }}>
               snoozed
             </Chip>
           ) : null}
           {contact.isPaused ? (
-            <Chip compact icon="pause-circle-outline" style={{ backgroundColor: '#F3F4F6' }}>
+            <Chip compact icon="pause-circle-outline" style={{ backgroundColor: colors.surfaceVariant }}>
               paused
             </Chip>
           ) : null}
           {contact.isArchived ? (
-            <Chip compact icon="archive-outline" style={{ backgroundColor: '#F3F4F6' }}>
+            <Chip compact icon="archive-outline" style={{ backgroundColor: colors.surfaceVariant }}>
               archived
             </Chip>
           ) : null}
@@ -177,7 +177,7 @@ export default function ContactDetailScreen() {
               <Text variant="titleMedium" style={{ color: dueColor, fontWeight: '600' }}>
                 {formatDueLabel(contact.nextDueAt)}
               </Text>
-              <Text variant="bodySmall" style={{ color: '#666' }}>
+              <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                 {contact.dueState === 'overdue'
                   ? `Next check-in was ${Math.abs(dueDays ?? 0)} days ago`
                   : contact.dueState === 'due'
@@ -190,30 +190,30 @@ export default function ContactDetailScreen() {
       ) : null}
 
       {/* Last contacted */}
-      <Surface style={styles.infoCard} elevation={0}>
+      <Surface style={[styles.infoCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
         <View style={styles.infoRow}>
-          <Icon source="history" size={18} color="#888" />
+          <Icon source="history" size={18} color={colors.onSurfaceVariant} />
           <Text variant="bodyMedium">{formatDaysSinceContact(contact.lastInteractionAt)}</Text>
         </View>
         <Divider style={{ marginVertical: 6 }} />
         <View style={styles.infoRow}>
-          <Icon source="calendar-repeat" size={18} color="#888" />
+          <Icon source="calendar-repeat" size={18} color={colors.onSurfaceVariant} />
           <Text variant="bodyMedium">Reaching out every {contact.cadence} days</Text>
         </View>
       </Surface>
 
       {/* Contact info */}
       {(contact.phone || contact.email || contact.birthday) ? (
-        <Surface style={styles.infoCard} elevation={0}>
+        <Surface style={[styles.infoCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
           {contact.phone ? (
             <View style={styles.infoRow}>
-              <Icon source="phone" size={18} color="#888" />
+              <Icon source="phone" size={18} color={colors.onSurfaceVariant} />
               <Text variant="bodyMedium" style={{ flex: 1 }}>{contact.phone}</Text>
               <Pressable onPress={() => Linking.openURL(`tel:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
-                <Icon source="phone-outgoing" size={18} color={orbitTheme.colors.primary} />
+                <Icon source="phone-outgoing" size={18} color={colors.primary} />
               </Pressable>
               <Pressable onPress={() => Linking.openURL(`sms:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
-                <Icon source="message-text" size={18} color={orbitTheme.colors.primary} />
+                <Icon source="message-text" size={18} color={colors.primary} />
               </Pressable>
             </View>
           ) : null}
@@ -222,14 +222,14 @@ export default function ContactDetailScreen() {
               onPress={() => Linking.openURL(`mailto:${contact.email}`)}
               style={({ pressed }) => [styles.infoRow, pressed && { opacity: 0.6 }]}
             >
-              <Icon source="email" size={18} color="#888" />
-              <Text variant="bodyMedium" style={{ color: orbitTheme.colors.primary, flex: 1 }}>{contact.email}</Text>
-              <Icon source="open-in-new" size={14} color="#AAA" />
+              <Icon source="email" size={18} color={colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={{ color: colors.primary, flex: 1 }}>{contact.email}</Text>
+              <Icon source="open-in-new" size={14} color={colors.outline} />
             </Pressable>
           ) : null}
           {contact.birthday ? (
             <View style={styles.infoRow}>
-              <Icon source="cake-variant" size={18} color="#888" />
+              <Icon source="cake-variant" size={18} color={colors.onSurfaceVariant} />
               <Text variant="bodyMedium" style={{ flex: 1 }}>
                 {formatBirthday(contact.birthday)}
                 {birthdayDays !== null && birthdayDays <= 14
@@ -273,10 +273,10 @@ export default function ContactDetailScreen() {
           };
 
           return (
-            <Surface style={styles.socialCard} elevation={0}>
+            <Surface style={[styles.socialCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <Icon source="at" size={16} color="#888" />
-                <Text variant="labelMedium" style={{ color: '#888' }}>Social</Text>
+                <Icon source="at" size={16} color={colors.onSurfaceVariant} />
+                <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>Social</Text>
               </View>
               <View style={{ gap: 8 }}>
                 {entries.map(([platform, handle]) => (
@@ -288,11 +288,11 @@ export default function ContactDetailScreen() {
                       pressed && { opacity: 0.6 },
                     ]}
                   >
-                    <Icon source={platformIcon[platform] ?? 'link'} size={18} color={orbitTheme.colors.primary} />
-                    <Text variant="bodyMedium" style={{ color: orbitTheme.colors.primary, flex: 1 }}>
+                    <Icon source={platformIcon[platform] ?? 'link'} size={18} color={colors.primary} />
+                    <Text variant="bodyMedium" style={{ color: colors.primary, flex: 1 }}>
                       @{handle.replace('@', '')}
                     </Text>
-                    <Icon source="open-in-new" size={14} color="#AAA" />
+                    <Icon source="open-in-new" size={14} color={colors.outline} />
                   </Pressable>
                 ))}
               </View>
@@ -305,10 +305,10 @@ export default function ContactDetailScreen() {
 
       {/* Notes */}
       {contact.notes ? (
-        <Surface style={styles.notesCard} elevation={0}>
+        <Surface style={[styles.notesCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <Icon source="note-text" size={16} color="#888" />
-            <Text variant="labelMedium" style={{ color: '#888' }}>
+            <Icon source="note-text" size={16} color={colors.onSurfaceVariant} />
+            <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant }}>
               Notes
             </Text>
           </View>
@@ -320,11 +320,11 @@ export default function ContactDetailScreen() {
 
       {/* Snooze */}
       {!contact.isPaused && !contact.isArchived ? (
-        <Surface style={styles.snoozeCard} elevation={0}>
+        <Surface style={[styles.snoozeCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
           <Text variant="titleSmall" style={{ fontWeight: '600', marginBottom: 4 }}>
             Snooze reminders
           </Text>
-          <Text variant="bodySmall" style={{ color: '#666', marginBottom: 12 }}>
+          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, marginBottom: 12 }}>
             Give yourself breathing room without pausing the relationship.
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -349,12 +349,12 @@ export default function ContactDetailScreen() {
       ) : null}
 
       {/* Recent activity */}
-      <Surface style={styles.activityCard} elevation={0}>
+      <Surface style={[styles.activityCard, { backgroundColor: colors.surfaceVariant }]} elevation={0}>
         <Text variant="titleSmall" style={{ fontWeight: '600', marginBottom: 10 }}>
           Recent activity
         </Text>
         {recentInteractions.length === 0 ? (
-          <Text variant="bodySmall" style={{ color: '#888' }}>
+          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
             No interactions logged yet.
           </Text>
         ) : (
@@ -366,17 +366,17 @@ export default function ContactDetailScreen() {
                     <Chip
                       compact
                       icon={INTERACTION_ICONS[interaction.type] ? INTERACTION_ICONS[interaction.type] : 'circle'}
-                      style={{ backgroundColor: orbitTheme.colors.surfaceVariant }}
+                      style={{ backgroundColor: colors.surfaceVariant }}
                     >
                       {interaction.type}
                     </Chip>
                   ) : null}
-                  <Text variant="bodySmall" style={{ color: '#888' }}>
+                  <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                     {formatOrbitDateTime(interaction.occurredAt)}
                   </Text>
                 </View>
                 {interaction.otherContacts.length > 0 ? (
-                  <Text variant="bodySmall" style={{ color: '#666', marginLeft: 4 }}>
+                  <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, marginLeft: 4 }}>
                     with {interaction.otherContacts.map((c) => c.name).join(', ')}
                   </Text>
                 ) : null}
@@ -458,7 +458,6 @@ const styles = StyleSheet.create({
   infoCard: {
     padding: 14,
     borderRadius: 16,
-    backgroundColor: '#FAFAFA',
   },
   infoRow: {
     flexDirection: 'row',
@@ -468,17 +467,14 @@ const styles = StyleSheet.create({
   notesCard: {
     padding: 14,
     borderRadius: 16,
-    backgroundColor: orbitTheme.colors.surfaceVariant,
   },
   snoozeCard: {
     padding: 14,
     borderRadius: 16,
-    backgroundColor: '#FAFAFA',
   },
   socialCard: {
     padding: 14,
     borderRadius: 16,
-    backgroundColor: '#FAFAFA',
   },
   socialRow: {
     flexDirection: 'row',
@@ -488,6 +484,5 @@ const styles = StyleSheet.create({
   activityCard: {
     padding: 14,
     borderRadius: 16,
-    backgroundColor: '#FAFAFA',
   },
 });

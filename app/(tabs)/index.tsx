@@ -58,7 +58,7 @@ export default function HomeScreen() {
       <View style={{ gap: 12 }}>
         {aggregates.map((aggregate) => {
           const isBirthday = aggregate.dueState === 'birthday';
-          const color = isBirthday ? '#EC4899' : getDueColor(aggregate.dueState);
+          const color = isBirthday ? colors.tertiary : getDueColor(aggregate.dueState);
           const label = isBirthday ? aggregate.title : (SECTION_LABELS[aggregate.dueState] ?? aggregate.dueState);
 
           return (

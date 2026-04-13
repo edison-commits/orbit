@@ -1,22 +1,28 @@
+import { useColorScheme } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { orbitTheme } from '@/lib/theme';
+import { useTheme } from 'react-native-paper';
+import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+  const systemColorScheme = useColorScheme();
+  const isDark = colors.background === orbitDarkTheme.colors.background;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
       {/* Colored top strip */}
-      <View style={styles.topStrip} />
+      <View style={[styles.topStrip, { backgroundColor: colors.primary }]} />
       <Tabs
         screenOptions={{
           headerTitleAlign: 'left',
-          tabBarStyle: styles.tabBar,
-          tabBarActiveTintColor: orbitTheme.colors.primary,
-          tabBarInactiveTintColor: '#9CA3AF',
+          tabBarStyle: [styles.tabBar, { backgroundColor: colors.surface }],
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.onSurfaceVariant,
           tabBarLabelStyle: styles.tabLabel,
-          headerStyle: styles.header,
-          headerTitleStyle: styles.headerTitle,
-          headerTintColor: '#FFFFFF',
+          headerStyle: [styles.header, { backgroundColor: colors.primary }],
+          headerTitleStyle: [styles.headerTitle, { color: colors.onPrimary }],
+          headerTintColor: colors.onPrimary,
         }}
       >
         <Tabs.Screen
@@ -51,14 +57,11 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: orbitTheme.colors.primary,
   },
   topStrip: {
     height: 4,
-    backgroundColor: orbitTheme.colors.primary,
   },
   tabBar: {
-    backgroundColor: '#FFFFFF',
     borderTopWidth: 0,
     elevation: 0,
     shadowOpacity: 0,
@@ -71,10 +74,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   header: {
-    backgroundColor: orbitTheme.colors.primary,
   },
   headerTitle: {
-    color: '#FFFFFF',
     fontWeight: '700' as const,
     fontSize: 18,
   },

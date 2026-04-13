@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ScrollView, View, StyleSheet, Alert, Linking } from 'react-native';
-import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator, useTheme } from 'react-native-paper';
 import { settingsService } from '@/features/settings/settingsService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
 import { useUiStore, type ThemeMode } from '@/store/ui';
@@ -459,7 +459,7 @@ export default function SettingsScreen() {
           ) : (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text variant="labelMedium" style={{ color: '#4ade80', fontWeight: '600' }}>✅ Pro active</Text>
+                <Text variant="labelMedium" style={{ color: themeColors.primary, fontWeight: '600' }}>✅ Pro active</Text>
                 <Text variant="bodySmall" style={{ color: themeColors.outline }}>· 30 days free</Text>
                 <View style={{ flex: 1 }} />
                 <Button mode="text" compact onPress={handleTestConnection}>
