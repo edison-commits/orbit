@@ -129,7 +129,7 @@ export default function ContactDetailScreen() {
             <Image source={{ uri: contact.photoUri }} style={styles.avatarPhoto} />
           ) : (
             <Surface style={[styles.avatar, { backgroundColor: colors.primary }]} elevation={1}>
-              <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
+              <Text style={[styles.avatarInitial, { color: colors.onPrimary }]}>{contact.name[0].toUpperCase()}</Text>
             </Surface>
           )}
           <View style={{ flex: 1 }}>
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
   },
   avatarInitial: {
-    color: '#fff',
+    color: undefined, // set dynamically via colors.onPrimary
     fontSize: 22,
     fontWeight: '700',
   },

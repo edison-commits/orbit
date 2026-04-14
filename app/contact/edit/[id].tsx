@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { ScrollView, View, Image, Pressable, StyleSheet } from 'react-native';
-import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, Divider, HelperText, Text, TextInput, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
@@ -18,6 +18,7 @@ type SocialData = {
 export default function EditContactScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [contact, setContact] = useState<Contact | null>(() => contactsRepository.getById(id));
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -179,7 +180,7 @@ export default function EditContactScreen() {
       <Divider />
 
       <Text variant="titleMedium">Social</Text>
-      <Text variant="bodySmall" style={{ color: '#888', marginTop: -8 }}>
+      <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, marginTop: -8 }}>
         Optional — how you actually keep up with them
       </Text>
 

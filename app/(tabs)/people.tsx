@@ -93,7 +93,7 @@ export default function PeopleScreen() {
                   <Image source={{ uri: contact.photoUri }} style={styles.avatar} />
                 ) : (
                   <Surface style={[styles.avatar, { backgroundColor: colors.primary }]} elevation={1}>
-                    <Text style={styles.avatarInitial}>{contact.name[0].toUpperCase()}</Text>
+                    <Text style={[styles.avatarInitial, { color: colors.onPrimary }]}>{contact.name[0].toUpperCase()}</Text>
                   </Surface>
                 )}
                 {/* Info */}
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   avatarInitial: {
-    color: '#fff',
+    color: undefined, // set dynamically via colors.onPrimary
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',

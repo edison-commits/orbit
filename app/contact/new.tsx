@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { createContact } from '@/features/contacts/contactService';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 import { RELATIONSHIP_TYPES, CADENCE_OPTIONS_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
@@ -38,6 +39,7 @@ export default function NewContactScreen() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { colors } = useTheme();
 
   async function handlePickPhoto() {
     const uri = await openImagePicker();
@@ -117,7 +119,7 @@ export default function NewContactScreen() {
         value={name}
         onChangeText={(t) => { setName(t); setError(null); }}
         autoFocus
-        style={{ backgroundColor: '#fff' }}
+        style={{ backgroundColor: colors.surface }}
       />
 
       {/* ── Relationship ─────────────────────────────── */}
@@ -167,7 +169,7 @@ export default function NewContactScreen() {
             label="Nickname"
             value={nickname}
             onChangeText={setNickname}
-            style={{ backgroundColor: '#fff' }}
+            style={{ backgroundColor: colors.surface }}
           />
 
           {/* Contact info */}
@@ -178,7 +180,7 @@ export default function NewContactScreen() {
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
             <TextInput
               label="Email"
@@ -186,7 +188,7 @@ export default function NewContactScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
             <BirthdayPicker value={birthday} onChange={setBirthday} />
           </View>
@@ -200,7 +202,7 @@ export default function NewContactScreen() {
               onChangeText={setInstagram}
               autoCapitalize="none"
               left={<TextInput.Icon icon="instagram" />}
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
             <TextInput
               label="X (Twitter)"
@@ -208,7 +210,7 @@ export default function NewContactScreen() {
               onChangeText={setTwitter}
               autoCapitalize="none"
               left={<TextInput.Icon icon="twitter" />}
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
             <TextInput
               label="LinkedIn"
@@ -216,7 +218,7 @@ export default function NewContactScreen() {
               onChangeText={setLinkedin}
               autoCapitalize="none"
               left={<TextInput.Icon icon="linkedin" />}
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
           </View>
 
@@ -230,7 +232,7 @@ export default function NewContactScreen() {
               multiline
               numberOfLines={3}
               placeholder="How you met · Likes · Dislikes · Allergies · Hobbies · Things to remember…"
-              style={{ backgroundColor: '#fff' }}
+              style={{ backgroundColor: colors.surface }}
             />
           </View>
         </View>
