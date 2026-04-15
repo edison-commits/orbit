@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { ScrollView, View, Image, StyleSheet } from 'react-native';
+import { FlatList, View, Image, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
@@ -21,61 +21,43 @@ export default function PeopleScreen() {
     }, []),
   );
 
-  const filtered = contacts.filter(
-    (c) =>
-      (dueFilter === 'all' || c.dueState === dueFilter) &&
-      (search.trim() === '' || c.name.toLowerCase().includes(search.toLowerCase().trim())),
+  const filtered = useMemo(
+    () =>
+      contacts.filter(
+        (c) =>
+          (dueFilter === 'all' || c.dueState === dueFilter) &&
+          (search.trim() === '' || c.name.toLowerCase().includes(search.toLowerCase().trim())),
+      ),
+    [contacts, dueFilter, search],
   );
 
-  return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      {/* Search */}
-      <Searchbar
-        placeholder="Search by name…"
-        value={search}
-        onChangeText={setSearch}
-        style={styles.searchbar}
-        inputStyle={{ fontSize: 15 }}
-      />
+  const listData = useMemo(() => {
+    const items: Array<{ type: 'contact'; contact: (typeof filtered)[0] } | { type: 'footer' }> =
+      filtered.map((contact) => ({ type: 'contact' as const, contact }));
+    if (contacts.length > 0) {
+      items.push({ type: 'footer' });
+    }
+    return items;
+  }, [filtered, contacts]);
 
-      {/* Filters */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {(['all', 'overdue', 'due', 'upcoming'] as const).map((filter) => (
-          <Chip
-            key={filter}
-            selected={dueFilter === filter}
-            onPress={() => setDueFilter(filter)}
-            style={dueFilter === filter ? { backgroundColor: getDueColor(filter === 'all' ? 'upcoming' : filter) + '22' } : {}}
-            textStyle={dueFilter === filter ? { color: getDueColor(filter === 'all' ? 'upcoming' : filter) } : {}}
-          >
-            {filter === 'all' ? 'All' : filter[0].toUpperCase() + filter.slice(1)}
-          </Chip>
-        ))}
-      </View>
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof listData)[0] }) => {
+      if (item.type === 'footer') {
+        return (
+          <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+            <Link href="/interaction/new" asChild>
+              <Button mode="outlined">Quick log interaction</Button>
+            </Link>
+          </View>
+        );
+      }
 
-      {/* Contact list */}
-      {filtered.length === 0 ? (
-        <Card>
-          <Card.Content style={{ gap: 8 }}>
-            <Text variant="titleMedium">{search ? 'No matches' : 'No people yet'}</Text>
-            <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-              {search
-                ? `Nobody named "${search}" in your orbit.`
-                : 'Add the people you want to stay connected with.'}
-            </Text>
-            {!search && (
-              <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
-                <Button mode="contained" icon="plus">Add your first person</Button>
-              </Link>
-            )}
-          </Card.Content>
-        </Card>
-      ) : (
-        filtered.map((contact) => (
-          <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
+      const contact = item.contact;
+      return (
+        <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+          <Link href={`/contact/${contact.id}`} asChild>
             <Card style={{ overflow: 'hidden' }}>
               <Card.Content style={styles.cardContent}>
-                {/* Color urgency bar */}
                 <View
                   style={[
                     styles.urgencyBar,
@@ -88,15 +70,15 @@ export default function PeopleScreen() {
                     },
                   ]}
                 />
-                {/* Photo */}
                 {contact.photoUri ? (
                   <Image source={{ uri: contact.photoUri }} style={styles.avatar} />
                 ) : (
                   <Surface style={[styles.avatar, { backgroundColor: colors.primary }]} elevation={1}>
-                    <Text style={[styles.avatarInitial, { color: colors.onPrimary }]}>{contact.name[0].toUpperCase()}</Text>
+                    <Text style={[styles.avatarInitial, { color: colors.onPrimary }]}>
+                      {contact.name[0].toUpperCase()}
+                    </Text>
                   </Surface>
                 )}
-                {/* Info */}
                 <View style={styles.info}>
                   <Text variant="titleMedium" numberOfLines={1}>
                     {contact.name}
@@ -106,7 +88,6 @@ export default function PeopleScreen() {
                     {contact.lastInteractionAt ? ` · ${formatDaysAgo(contact.lastInteractionAt)}` : ''}
                   </Text>
                 </View>
-                {/* Right side */}
                 <View style={styles.right}>
                   {contact.isPaused ? (
                     <Chip compact icon="pause-circle-outline" style={styles.stateChip}>
@@ -122,15 +103,80 @@ export default function PeopleScreen() {
               </Card.Content>
             </Card>
           </Link>
-        ))
-      )}
+        </View>
+      );
+    },
+    [colors],
+  );
 
-      {contacts.length > 0 && (
-        <Link href="/interaction/new" asChild>
-          <Button mode="outlined">Quick log interaction</Button>
-        </Link>
-      )}
-    </ScrollView>
+  const ListHeader = (
+    <View style={{ paddingHorizontal: 16, gap: 12 }}>
+      <Searchbar
+        placeholder="Search by name…"
+        value={search}
+        onChangeText={setSearch}
+        style={styles.searchbar}
+        inputStyle={{ fontSize: 15 }}
+      />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {(['all', 'overdue', 'due', 'upcoming'] as const).map((filter) => (
+          <Chip
+            key={filter}
+            selected={dueFilter === filter}
+            onPress={() => setDueFilter(filter)}
+            style={
+              dueFilter === filter
+                ? { backgroundColor: getDueColor(filter === 'all' ? 'upcoming' : filter) + '22' }
+                : {}
+            }
+            textStyle={
+              dueFilter === filter
+                ? { color: getDueColor(filter === 'all' ? 'upcoming' : filter) }
+                : {}
+            }
+          >
+            {filter === 'all' ? 'All' : filter[0].toUpperCase() + filter.slice(1)}
+          </Chip>
+        ))}
+      </View>
+    </View>
+  );
+
+  const ListEmpty = (
+    <View style={{ paddingHorizontal: 16 }}>
+      <Card>
+        <Card.Content style={{ gap: 8 }}>
+          <Text variant="titleMedium">{search ? 'No matches' : 'No people yet'}</Text>
+          <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+            {search
+              ? `Nobody named "${search}" in your orbit.`
+              : 'Add the people you want to stay connected with.'}
+          </Text>
+          {!search && (
+            <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
+              <Button mode="contained" icon="plus">
+                Add your first person
+              </Button>
+            </Link>
+          )}
+        </Card.Content>
+      </Card>
+    </View>
+  );
+
+  return (
+    <FlatList
+      data={filtered.length === 0 ? [] : listData}
+      renderItem={renderItem}
+      keyExtractor={(item, index) => (item.type === 'footer' ? 'footer' : item.contact.id)}
+      ListHeaderComponent={ListHeader}
+      ListEmptyComponent={ListEmpty}
+      contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      keyboardShouldPersistTaps="handled"
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+    />
   );
 }
 
