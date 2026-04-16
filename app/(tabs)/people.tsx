@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { FlatList, View, Image, StyleSheet } from 'react-native';
+import { FlatList, View, Image, StyleSheet, RefreshControl } from 'react-native';
 import { Button, Card, Chip, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
@@ -13,13 +13,24 @@ export default function PeopleScreen() {
   const setDueFilter = useUiStore((state) => state.setDueFilter);
   const [contacts, setContacts] = useState(() => contactsRepository.listByUrgency());
   const [search, setSearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
+
+  const reloadContacts = useCallback(() => {
+    setContacts(contactsRepository.listByUrgency());
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setContacts(contactsRepository.listByUrgency());
-    }, []),
+      reloadContacts();
+    }, [reloadContacts]),
   );
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    reloadContacts();
+    setRefreshing(false);
+  }, [reloadContacts]);
 
   const filtered = useMemo(
     () =>
@@ -172,6 +183,7 @@ export default function PeopleScreen() {
       ListHeaderComponent={ListHeader}
       ListEmptyComponent={ListEmpty}
       contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       keyboardShouldPersistTaps="handled"
       removeClippedSubviews={true}
       maxToRenderPerBatch={10}
