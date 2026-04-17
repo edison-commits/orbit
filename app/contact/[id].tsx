@@ -47,6 +47,7 @@ export default function ContactDetailScreen() {
   );
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAllInteractions, setShowAllInteractions] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -359,7 +360,7 @@ export default function ContactDetailScreen() {
           </Text>
         ) : (
           <View style={{ gap: 14 }}>
-            {recentInteractions.slice(0, 5).map((interaction) => (
+            {recentInteractions.slice(0, showAllInteractions ? undefined : 5).map((interaction) => (
               <View key={interaction.id} style={{ gap: 4 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   {interaction.type ? (
@@ -388,6 +389,16 @@ export default function ContactDetailScreen() {
               </View>
             ))}
           </View>
+          {recentInteractions.length > 5 ? (
+            <Button
+              mode="text"
+              compact
+              onPress={() => setShowAllInteractions(!showAllInteractions)}
+              icon={showAllInteractions ? 'chevron-up' : 'chevron-down'}
+            >
+              {showAllInteractions ? 'Show less' : `Show all ${recentInteractions.length} interactions`}
+            </Button>
+          ) : null}
         )}
       </Surface>
 
