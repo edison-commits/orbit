@@ -20,6 +20,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     reminderService.configure();
+    useUiStore.getState().hydrate();
 
     runMigrations()
       .then(async () => {
