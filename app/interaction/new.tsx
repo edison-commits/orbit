@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, HelperText, Text, TextInput } from 'react-native-paper';
+import { Button, Chip, HelperText, Searchbar, Text, TextInput } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { saveInteraction } from '@/features/interactions/interactionService';
 import { INTERACTION_TYPES } from '@/lib/constants';
@@ -62,7 +62,17 @@ export default function NewInteractionScreen() {
     }
   }
 
+  const [contactSearch, setContactSearch] = useState('');
+
   const selectedContacts = contacts.filter((contact) => selectedContactIds.includes(contact.id));
+
+  const filteredContacts = useMemo(
+    () =>
+      contactSearch.trim() === ''
+        ? contacts
+        : contacts.filter((c) => c.name.toLowerCase().includes(contactSearch.toLowerCase().trim())),
+    [contacts, contactSearch],
+  );
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
@@ -83,8 +93,14 @@ export default function NewInteractionScreen() {
             ))}
           </View>
         ) : null}
+        <Searchbar
+          placeholder="Search people..."
+          value={contactSearch}
+          onChangeText={setContactSearch}
+          style={{ marginVertical: 4 }}
+        />
         <View style={{ gap: 8 }}>
-          {contacts.map((contact) => {
+          {filteredContacts.map((contact) => {
             const checked = selectedContactIds.includes(contact.id);
             return (
               <Chip
@@ -97,6 +113,9 @@ export default function NewInteractionScreen() {
               </Chip>
             );
           })}
+          {filteredContacts.length === 0 && contactSearch.trim() !== '' && (
+            <Text variant="bodySmall" style={{ opacity: 0.6 }}>No matches found</Text>
+          )}
         </View>
       </View>
 
