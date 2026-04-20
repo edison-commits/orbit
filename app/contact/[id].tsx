@@ -359,46 +359,48 @@ export default function ContactDetailScreen() {
             No interactions logged yet.
           </Text>
         ) : (
-          <View style={{ gap: 14 }}>
-            {recentInteractions.slice(0, showAllInteractions ? undefined : 5).map((interaction) => (
-              <View key={interaction.id} style={{ gap: 4 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  {interaction.type ? (
-                    <Chip
-                      compact
-                      icon={INTERACTION_ICONS[interaction.type] ? INTERACTION_ICONS[interaction.type] : 'circle'}
-                      style={{ backgroundColor: colors.surfaceVariant }}
-                    >
-                      {interaction.type}
-                    </Chip>
+          <>
+            <View style={{ gap: 14 }}>
+              {recentInteractions.slice(0, showAllInteractions ? undefined : 5).map((interaction) => (
+                <View key={interaction.id} style={{ gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    {interaction.type ? (
+                      <Chip
+                        compact
+                        icon={INTERACTION_ICONS[interaction.type] ? INTERACTION_ICONS[interaction.type] : 'circle'}
+                        style={{ backgroundColor: colors.surfaceVariant }}
+                      >
+                        {interaction.type}
+                      </Chip>
+                    ) : null}
+                    <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+                      {formatOrbitDateTime(interaction.occurredAt)}
+                    </Text>
+                  </View>
+                  {interaction.otherContacts.length > 0 ? (
+                    <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, marginLeft: 4 }}>
+                      with {interaction.otherContacts.map((c) => c.name).join(', ')}
+                    </Text>
                   ) : null}
-                  <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-                    {formatOrbitDateTime(interaction.occurredAt)}
-                  </Text>
+                  {interaction.note ? (
+                    <Text variant="bodyMedium" style={{ marginLeft: 4, lineHeight: 20 }}>
+                      {interaction.note}
+                    </Text>
+                  ) : null}
                 </View>
-                {interaction.otherContacts.length > 0 ? (
-                  <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, marginLeft: 4 }}>
-                    with {interaction.otherContacts.map((c) => c.name).join(', ')}
-                  </Text>
-                ) : null}
-                {interaction.note ? (
-                  <Text variant="bodyMedium" style={{ marginLeft: 4, lineHeight: 20 }}>
-                    {interaction.note}
-                  </Text>
-                ) : null}
-              </View>
-            ))}
-          </View>
-          {recentInteractions.length > 5 ? (
-            <Button
-              mode="text"
-              compact
-              onPress={() => setShowAllInteractions(!showAllInteractions)}
-              icon={showAllInteractions ? 'chevron-up' : 'chevron-down'}
-            >
-              {showAllInteractions ? 'Show less' : `Show all ${recentInteractions.length} interactions`}
-            </Button>
-          ) : null}
+              ))}
+            </View>
+            {recentInteractions.length > 5 ? (
+              <Button
+                mode="text"
+                compact
+                onPress={() => setShowAllInteractions(!showAllInteractions)}
+                icon={showAllInteractions ? 'chevron-up' : 'chevron-down'}
+              >
+                {showAllInteractions ? 'Show less' : `Show all ${recentInteractions.length} interactions`}
+              </Button>
+            ) : null}
+          </>
         )}
       </Surface>
 
