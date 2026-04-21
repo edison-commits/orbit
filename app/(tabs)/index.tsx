@@ -3,6 +3,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
+import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
 
@@ -22,9 +23,9 @@ export default function HomeScreen() {
     }, []),
   );
 
-  const totalContacts = aggregates.reduce((sum, a) => sum + a.count, 0);
+  const totalContactCount = aggregates.reduce((sum, a) => sum + a.count, 0);
 
-  if (totalContacts === 0) {
+  if (totalContactCount === 0) {
     return (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
@@ -49,11 +50,35 @@ export default function HomeScreen() {
     );
   }
 
+  // Stats for quick overview
+  const stats = contactsRepository.getSummaryCounts();
+  const totalContacts = contactsRepository.listByUrgency().length;
+
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         Who needs you — now, today, and soon.
       </Text>
+
+      {/* Stats row */}
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={[styles.statCard, { backgroundColor: colors.primaryContainer }]}>
+          <Text variant="headlineSmall" style={{ color: colors.onPrimaryContainer, fontWeight: '700' }}>{totalContacts}</Text>
+          <Text variant="labelSmall" style={{ color: colors.onPrimaryContainer }}>People</Text>
+        </View>
+        {(stats.overdue ?? 0) > 0 && (
+          <View style={[styles.statCard, { backgroundColor: DUE_COLORS.overdue + '18' }]}>
+            <Text variant="headlineSmall" style={{ color: DUE_COLORS.overdue, fontWeight: '700' }}>{stats.overdue}</Text>
+            <Text variant="labelSmall" style={{ color: DUE_COLORS.overdue }}>Overdue</Text>
+          </View>
+        )}
+        {(stats.due ?? 0) > 0 && (
+          <View style={[styles.statCard, { backgroundColor: DUE_COLORS.due + '18' }]}>
+            <Text variant="headlineSmall" style={{ color: DUE_COLORS.due, fontWeight: '700' }}>{stats.due}</Text>
+            <Text variant="labelSmall" style={{ color: DUE_COLORS.due }}>Due today</Text>
+          </View>
+        )}
+      </View>
 
       <View style={{ gap: 12 }}>
         {aggregates.map((aggregate) => {
@@ -164,5 +189,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 2,
   },
 });
