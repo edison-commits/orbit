@@ -50,9 +50,8 @@ export default function HomeScreen() {
     );
   }
 
-  // Stats for quick overview
   const stats = contactsRepository.getSummaryCounts();
-  const totalContacts = contactsRepository.listByUrgency().length;
+  const totalContacts = (stats.overdue ?? 0) + (stats.due ?? 0) + (stats.upcoming ?? 0);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
