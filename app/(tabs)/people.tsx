@@ -120,6 +120,16 @@ export default function PeopleScreen() {
     [colors],
   );
 
+  const dueCounts = useMemo(() => {
+    const counts = { all: contacts.length, overdue: 0, due: 0, upcoming: 0 };
+    for (const c of contacts) {
+      if (c.dueState === 'overdue') counts.overdue++;
+      else if (c.dueState === 'due') counts.due++;
+      else counts.upcoming++;
+    }
+    return counts;
+  }, [contacts]);
+
   const ListHeader = (
     <View style={{ paddingHorizontal: 16, gap: 12 }}>
       <Searchbar
@@ -146,7 +156,7 @@ export default function PeopleScreen() {
                 : {}
             }
           >
-            {filter === 'all' ? 'All' : filter[0].toUpperCase() + filter.slice(1)}
+            {filter === 'all' ? 'All' : filter[0].toUpperCase() + filter.slice(1)} ({dueCounts[filter]})
           </Chip>
         ))}
       </View>
