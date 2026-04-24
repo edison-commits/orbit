@@ -28,8 +28,11 @@ export default function PeopleScreen() {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    reloadContacts();
-    setRefreshing(false);
+    // Use requestAnimationFrame so the refresh spinner renders before synchronous DB work blocks the thread
+    requestAnimationFrame(() => {
+      reloadContacts();
+      setRefreshing(false);
+    });
   }, [reloadContacts]);
 
   const filtered = useMemo(
