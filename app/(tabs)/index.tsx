@@ -3,7 +3,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
-import { contactsRepository } from '@/db/repositories/contactsRepository';
+import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
 
@@ -16,10 +16,12 @@ const SECTION_LABELS: Record<string, string> = {
 export default function HomeScreen() {
   const { colors } = useTheme();
   const [aggregates, setAggregates] = useState(() => getHomeAggregates());
+  const [stats, setStats] = useState<ContactsSummaryCounts>(() => contactsRepository.getSummaryCounts());
 
   useFocusEffect(
     useCallback(() => {
       setAggregates(getHomeAggregates());
+      setStats(contactsRepository.getSummaryCounts());
     }, []),
   );
 
@@ -50,7 +52,6 @@ export default function HomeScreen() {
     );
   }
 
-  const stats = contactsRepository.getSummaryCounts();
   const totalContacts = (stats.overdue ?? 0) + (stats.due ?? 0) + (stats.upcoming ?? 0);
 
   return (

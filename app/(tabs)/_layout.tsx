@@ -1,7 +1,7 @@
 import { useColorScheme } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { useTheme } from 'react-native-paper';
+import { useTheme, Icon, Text } from 'react-native-paper';
 import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
 
 export default function TabsLayout() {
@@ -31,6 +31,9 @@ export default function TabsLayout() {
             title: 'Home',
             tabBarLabel: 'Home',
             headerTitle: 'Orbit',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="home" size={size} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -39,6 +42,9 @@ export default function TabsLayout() {
             title: 'People',
             tabBarLabel: 'People',
             headerTitle: 'People',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="account-group" size={size} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -47,6 +53,9 @@ export default function TabsLayout() {
             title: 'Settings',
             tabBarLabel: 'Settings',
             headerTitle: 'Settings',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="cog" size={size} color={color} />
+            ),
           }}
         />
       </Tabs>
