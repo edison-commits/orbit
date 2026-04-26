@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useFocusEffect } from 'expo-router';
-import { FlatList, View, Image, StyleSheet, RefreshControl } from 'react-native';
-import { Button, Card, Chip, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
+import { Link, useFocusEffect, router } from 'expo-router';
+import { FlatList, View, Image, Pressable, StyleSheet, RefreshControl } from 'react-native';
+import { Button, Card, Chip, IconButton, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
 import { useUiStore } from '@/store/ui';
@@ -69,8 +69,8 @@ export default function PeopleScreen() {
       const contact = item.contact;
       return (
         <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-          <Link href={`/contact/${contact.id}`} asChild>
-            <Card style={{ overflow: 'hidden' }}>
+          <Card style={{ overflow: 'hidden' }}>
+            <Pressable onPress={() => router.push(`/contact/${contact.id}`)} style={{}}>
               <Card.Content style={styles.cardContent}>
                 <View
                   style={[
@@ -115,8 +115,17 @@ export default function PeopleScreen() {
                   <Chip compact>{contact.relationshipType}</Chip>
                 </View>
               </Card.Content>
-            </Card>
-          </Link>
+            </Pressable>
+            {/* Quick-log button — separate from card press to avoid double-navigation */}
+            <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
+              <IconButton
+                icon="plus-circle-outline"
+                size={22}
+                iconColor={colors.primary}
+                style={styles.quickLog}
+              />
+            </Link>
+          </Card>
         </View>
       );
     },
@@ -246,5 +255,11 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   stateChip: {
+  },
+  quickLog: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    margin: 0,
   },
 });
