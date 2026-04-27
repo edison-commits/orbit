@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { useLocalSearchParams, Link, useFocusEffect } from 'expo-router';
+import { useCallback, useLayoutEffect, useState } from 'react';
+import { useLocalSearchParams, Link, useFocusEffect, useNavigation } from 'expo-router';
 import { ScrollView, View, StyleSheet, Linking, Pressable, Image } from 'react-native';
 import { Button, Chip, Divider, HelperText, Text, Surface, Icon, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
@@ -48,6 +48,23 @@ export default function ContactDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showAllInteractions, setShowAllInteractions] = useState(false);
+  const navigation = useNavigation();
+
+  // Add header-right "Log interaction" button so it's always accessible without scrolling
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Link href={{ pathname: '/interaction/new', params: { contactId: id } }} asChild>
+          <Pressable
+            hitSlop={12}
+            style={({ pressed }) => [{ marginRight: 8, padding: 4 }, pressed && { opacity: 0.6 }]}
+          >
+            <Icon source="plus-circle" size={26} color={colors.onPrimary} />
+          </Pressable>
+        </Link>
+      ),
+    });
+  }, [navigation, id, colors.onPrimary]);
 
   useFocusEffect(
     useCallback(() => {
