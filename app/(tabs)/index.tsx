@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
 import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
@@ -120,28 +120,50 @@ export default function HomeScreen() {
                       const birthdayDays = isBirthday && 'birthdayDays' in contact
                         ? (contact as any).birthdayDays
                         : null;
+                      const showQuickLog = contact.dueState === 'overdue' || contact.dueState === 'due';
                       return (
-                        <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
-                          <View style={styles.contactRow}>
-                            {isBirthday ? (
-                              <Icon source="cake-variant" size={14} color={color} style={{ marginTop: 1 }} />
-                            ) : (
-                              <View style={[styles.miniDot, { backgroundColor: color }]} />
-                            )}
-                            <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
-                              {contact.name}
-                            </Text>
-                            {birthdayDays !== null ? (
-                              <Text variant="bodySmall" style={{ color: colors.outline }}>
-                                {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
+                        <View key={contact.id} style={styles.contactRowOuter}>
+                          <Link href={`/contact/${contact.id}`} asChild>
+                            <Pressable
+                              style={({ pressed }) => [
+                                styles.contactRow,
+                                pressed && { opacity: 0.6 },
+                              ]}
+                            >
+                              {isBirthday ? (
+                                <Icon source="cake-variant" size={14} color={color} style={{ marginTop: 1 }} />
+                              ) : (
+                                <View style={[styles.miniDot, { backgroundColor: color }]} />
+                              )}
+                              <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
+                                {contact.name}
                               </Text>
-                            ) : (
-                              <Text variant="bodySmall" style={{ color: colors.outline }}>
-                                {formatDueLabel(contact.nextDueAt)}
-                              </Text>
-                            )}
-                          </View>
-                        </Link>
+                              {birthdayDays !== null ? (
+                                <Text variant="bodySmall" style={{ color: colors.outline }}>
+                                  {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
+                                </Text>
+                              ) : (
+                                <Text variant="bodySmall" style={{ color: colors.outline }}>
+                                  {formatDueLabel(contact.nextDueAt)}
+                                </Text>
+                              )}
+                            </Pressable>
+                          </Link>
+                          {showQuickLog && (
+                            <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
+                              <Pressable
+                                hitSlop={8}
+                                style={({ pressed }) => [
+                                  styles.quickLogBtn,
+                                  { backgroundColor: colors.primaryContainer },
+                                  pressed && { opacity: 0.6 },
+                                ]}
+                              >
+                                <Icon source="plus" size={14} color={colors.primary} />
+                              </Pressable>
+                            </Link>
+                          )}
+                        </View>
                       );
                     })}
                   </View>
@@ -185,10 +207,24 @@ const styles = StyleSheet.create({
   countChip: {
     borderRadius: 12,
   },
+  contactRowOuter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    paddingVertical: 2,
+  },
+  quickLogBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statCard: {
     flex: 1,
