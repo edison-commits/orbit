@@ -131,7 +131,7 @@ export default function HomeScreen() {
                               ]}
                             >
                               {isBirthday ? (
-                                <Icon source="cake-variant" size={14} color={color} style={{ marginTop: 1 }} />
+                                <View style={{ marginTop: 1 }}><Icon source="cake-variant" size={14} color={color} /></View>
                               ) : (
                                 <View style={[styles.miniDot, { backgroundColor: color }]} />
                               )}

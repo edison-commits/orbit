@@ -81,7 +81,7 @@ export function getHomeAggregates(): HomeAggregate[] {
   if (birthdayContacts.length > 0) {
     const names = birthdayContacts.map((c) => c.name).join(', ');
     sections.push({
-      dueState: 'birthday' as DueState | 'birthday',
+      dueState: 'birthday' as DueState,
       title: '🎂 Birthdays soon',
       count: birthdayContacts.length,
       summary:

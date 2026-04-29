@@ -21,7 +21,7 @@ let _supabase: SupabaseClient | null = null;
 function getClient(serviceKey: string): SupabaseClient {
   if (!_supabase) {
     _supabase = createClient(SUPABASE_URL, serviceKey, {
-      auth: { persistSession: false, autoRefreshSession: false },
+      auth: { persistSession: false, autoRefreshToken: false },
     });
   }
   return _supabase;
@@ -64,8 +64,8 @@ export async function testConnection(): Promise<{ ok: boolean; error?: string }>
 export interface OrbitBackup {
   version: number;
   exported_at: string;
-  contacts: ReturnType<typeof contactsRepository.getAll>;
-  interactions: ReturnType<typeof interactionsRepository.getAll>;
+  contacts: ReturnType<typeof contactsRepository.listByUrgency>;
+  interactions: ReturnType<typeof interactionsRepository.listRecent>;
   feedback: ReturnType<typeof feedbackRepository.getAll>;
   meta: { defaultCadence: number }[];
 }
@@ -76,16 +76,16 @@ export async function createBackup(): Promise<string> {
 
   const supabase = getClient(key);
 
-  const db = require('@/db/client').getDb();
+  const { getDb } = require('@/db/client') as { getDb: () => { getFirstSync<T>(sql: string, params: unknown[]): T | null } };
   const defaultCadence =
-    db.getFirstSync<{ value: string }>('SELECT value FROM app_meta WHERE key = ?;', ['defaultCadence']) ??
+    getDb().getFirstSync<{ value: string }>('SELECT value FROM app_meta WHERE key = ?;', ['defaultCadence']) ??
     { value: '30' };
 
   const backup: OrbitBackup = {
     version: 1,
     exported_at: new Date().toISOString(),
-    contacts: contactsRepository.getAll(),
-    interactions: interactionsRepository.getAll(),
+    contacts: contactsRepository.listByUrgency(),
+    interactions: interactionsRepository.listRecent(9999),
     feedback: feedbackRepository.getAll(),
     meta: [{ defaultCadence: parseInt(defaultCadence.value, 10) }],
   };
@@ -112,7 +112,7 @@ export async function listBackups(): Promise<{ name: string; created_at: string 
     .list('orbit_backup_', { sortBy: { column: 'created_at', order: 'desc' } });
 
   if (error) throw new Error(`List failed: ${error.message}`);
-  return (data ?? []).map((f) => ({ name: f.name, created_at: f.created_at ?? f.createdAt ?? '' }));
+  return (data ?? []).map((f) => ({ name: f.name, created_at: f.created_at ?? '' }));
 }
 
 export async function restoreBackup(filename: string): Promise<void> {
@@ -129,7 +129,12 @@ export async function restoreBackup(filename: string): Promise<void> {
 
   if (!backup.version || !backup.contacts) throw new Error('Invalid backup file');
 
-  const db = require('@/db/client').getDb();
+  const { getDb } = require('@/db/client') as { getDb: () => {
+    withTransactionSync(fn: () => void): void;
+    execSync(sql: string): void;
+    runSync(sql: string, params: unknown[]): void;
+  } };
+  const db = getDb();
 
   db.withTransactionSync(() => {
     db.execSync('DELETE FROM interaction_contacts;');
@@ -141,14 +146,14 @@ export async function restoreBackup(filename: string): Promise<void> {
       db.runSync(
         `INSERT INTO contacts (id,name,nickname,photo_uri,relationship_type,how_we_met,birthday,location,phone,email,notes,tags_json,cadence,cadence_snoozed_until,is_paused,is_archived,last_interaction_at,next_due_at,due_state,created_at,updated_at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`,
-        [c.id, c.name, c.nickname, c.photo_uri, c.relationship_type, c.how_we_met, c.birthday, c.location, c.phone, c.email, c.notes, c.tags_json, c.cadence, c.cadence_snoozed_until ?? null, c.is_paused ?? 0, c.is_archived ?? 0, c.last_interaction_at ?? null, c.next_due_at ?? null, c.due_state, c.created_at, c.updated_at],
+        [c.id, c.name, c.nickname, c.photoUri, c.relationshipType, c.howWeMet, c.birthday, c.location, c.phone, c.email, c.notes, c.tagsJson, c.cadence, c.cadenceSnoozedUntil ?? null, c.isPaused ?? 0, c.isArchived ?? 0, c.lastInteractionAt ?? null, c.nextDueAt ?? null, c.dueState, c.createdAt, c.updatedAt],
       );
     }
 
     for (const i of backup.interactions) {
       db.runSync(
         `INSERT INTO interactions (id,occurred_at,type,note,created_at) VALUES (?,?,?,?,?);`,
-        [i.id, i.occurred_at, i.type ?? null, i.note ?? null, i.created_at],
+        [i.id, i.occurredAt, i.type ?? null, i.note ?? null, i.createdAt],
       );
     }
 
