@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { Pressable, ScrollView, View, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, View, StyleSheet, RefreshControl } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates } from '@/features/home/homeService';
 import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
@@ -17,19 +17,37 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const [aggregates, setAggregates] = useState(() => getHomeAggregates());
   const [stats, setStats] = useState<ContactsSummaryCounts>(() => contactsRepository.getSummaryCounts());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const reload = useCallback(() => {
+    setAggregates(getHomeAggregates());
+    setStats(contactsRepository.getSummaryCounts());
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setAggregates(getHomeAggregates());
-      setStats(contactsRepository.getSummaryCounts());
-    }, []),
+      reload();
+    }, [reload]),
   );
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    requestAnimationFrame(() => {
+      reload();
+      setRefreshing(false);
+    });
+  }, [reload]);
 
   const totalContactCount = aggregates.reduce((sum, a) => sum + a.count, 0);
 
   if (totalContactCount === 0) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, gap: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+        }
+      >
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
           Who needs you — now, today, and soon.
         </Text>
@@ -55,7 +73,12 @@ export default function HomeScreen() {
   const totalContacts = (stats.overdue ?? 0) + (stats.due ?? 0) + (stats.upcoming ?? 0);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+      }
+    >
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         Who needs you — now, today, and soon.
       </Text>
