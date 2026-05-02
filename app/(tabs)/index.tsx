@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, View, StyleSheet, RefreshControl } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
-import { getHomeAggregates } from '@/features/home/homeService';
+import { getHomeAggregates, type BirthdayContactListItem } from '@/features/home/homeService';
 import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
-import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
+import { formatDueLabel, getDueColor } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
 
 const SECTION_LABELS: Record<string, string> = {
@@ -12,6 +12,10 @@ const SECTION_LABELS: Record<string, string> = {
   due: 'Due today',
   upcoming: 'Upcoming',
 };
+
+function hasBirthdayDays(contact: object): contact is BirthdayContactListItem {
+  return 'birthdayDays' in contact && typeof contact.birthdayDays === 'number';
+}
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -140,8 +144,8 @@ export default function HomeScreen() {
                 {aggregate.contacts.length > 0 && (
                   <View style={{ gap: 6, marginTop: 2 }}>
                     {aggregate.contacts.map((contact) => {
-                      const birthdayDays = isBirthday && 'birthdayDays' in contact
-                        ? (contact as any).birthdayDays
+                      const birthdayDays = isBirthday && hasBirthdayDays(contact)
+                        ? contact.birthdayDays
                         : null;
                       const showQuickLog = contact.dueState === 'overdue' || contact.dueState === 'due';
                       return (

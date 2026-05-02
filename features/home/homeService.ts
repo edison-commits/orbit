@@ -2,20 +2,33 @@ import { contactsRepository, type ContactsListItem } from '@/db/repositories/con
 import { formatDueLabel, getDaysUntilBirthday } from '@/lib/dates';
 import type { DueState } from '@/types/models';
 
-export interface HomeAggregate {
-  dueState: DueState;
+type StandardHomeDueState = Exclude<DueState, 'birthday'>;
+export type BirthdayContactListItem = ContactsListItem & { birthdayDays: number };
+
+export interface StandardHomeAggregate {
+  dueState: StandardHomeDueState;
   title: string;
   count: number;
   summary: string;
   contacts: ContactsListItem[];
 }
 
-export interface BirthdayAggregate {
+export interface BirthdayHomeAggregate {
+  dueState: 'birthday';
+  title: string;
   count: number;
-  contacts: Array<ContactsListItem & { birthdayDays: number }>;
+  summary: string;
+  contacts: BirthdayContactListItem[];
 }
 
-function buildSummary(dueState: DueState, count: number, contacts: ContactsListItem[]) {
+export type HomeAggregate = StandardHomeAggregate | BirthdayHomeAggregate;
+
+export interface BirthdayAggregate {
+  count: number;
+  contacts: BirthdayContactListItem[];
+}
+
+function buildSummary(dueState: StandardHomeDueState, count: number, contacts: ContactsListItem[]) {
   if (count === 0) {
     if (dueState === 'overdue') return 'Nobody is slipping right now.';
     if (dueState === 'due') return 'Nothing needs a touchpoint today.';
@@ -81,7 +94,7 @@ export function getHomeAggregates(): HomeAggregate[] {
   if (birthdayContacts.length > 0) {
     const names = birthdayContacts.map((c) => c.name).join(', ');
     sections.push({
-      dueState: 'birthday' as DueState,
+      dueState: 'birthday',
       title: '🎂 Birthdays soon',
       count: birthdayContacts.length,
       summary:
@@ -94,7 +107,7 @@ export function getHomeAggregates(): HomeAggregate[] {
                   : `in ${birthdayContacts[0].birthdayDays} days`
             }`
           : names,
-      contacts: birthdayContacts as ContactsListItem[],
+      contacts: birthdayContacts,
     });
   }
 
