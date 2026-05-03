@@ -152,6 +152,8 @@ export default function HomeScreen() {
                         <View key={contact.id} style={styles.contactRowOuter}>
                           <Link href={`/contact/${contact.id}`} asChild>
                             <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`Open ${contact.name}'s contact details`}
                               style={({ pressed }) => [
                                 styles.contactRow,
                                 pressed && { opacity: 0.6 },
@@ -179,6 +181,8 @@ export default function HomeScreen() {
                           {showQuickLog && (
                             <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
                               <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={`Log an interaction with ${contact.name}`}
                                 hitSlop={8}
                                 style={({ pressed }) => [
                                   styles.quickLogBtn,

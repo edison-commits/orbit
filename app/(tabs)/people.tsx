@@ -70,7 +70,12 @@ export default function PeopleScreen() {
       return (
         <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
           <Card style={{ overflow: 'hidden' }}>
-            <Pressable onPress={() => router.push(`/contact/${contact.id}`)} style={{}}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${contact.name}'s contact details`}
+              onPress={() => router.push(`/contact/${contact.id}`)}
+              style={{}}
+            >
               <Card.Content style={styles.cardContent}>
                 <View
                   style={[
@@ -120,6 +125,7 @@ export default function PeopleScreen() {
             <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
               <IconButton
                 icon="plus-circle-outline"
+                accessibilityLabel={`Log an interaction with ${contact.name}`}
                 size={22}
                 iconColor={colors.primary}
                 style={styles.quickLog}
