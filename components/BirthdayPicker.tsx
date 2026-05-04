@@ -46,8 +46,9 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
 
   const handleOpen = () => {
     const { month, day, year } = parseValue();
+    const validDaysForBirthday = getDaysInMonth(month, year);
     setSelectedMonth(month);
-    setSelectedDay(Math.min(day, daysInMonth));
+    setSelectedDay(Math.min(day, validDaysForBirthday));
     setSelectedYear(year);
     setShowPicker(true);
   };
