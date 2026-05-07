@@ -76,6 +76,9 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
               {MONTHS.map((m, i) => (
                 <Pressable
                   key={m}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${m} as birthday month`}
+                  accessibilityState={{ selected: selectedMonth === i + 1 }}
                   onPress={() => {
                     setSelectedMonth(i + 1);
                     const newDays = getDaysInMonth(i + 1, selectedYear);
@@ -105,6 +108,9 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
               {days.map((d) => (
                 <Pressable
                   key={d}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${d} as birthday day`}
+                  accessibilityState={{ selected: selectedDay === d }}
                   onPress={() => setSelectedDay(d)}
                   style={[
                     styles.option,
@@ -130,6 +136,9 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
               {YEARS.map((y) => (
                 <Pressable
                   key={y}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${y} as birthday year`}
+                  accessibilityState={{ selected: selectedYear === y }}
                   onPress={() => {
                     setSelectedYear(y);
                     const newDays = getDaysInMonth(selectedMonth, y);
@@ -154,10 +163,20 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-          <Pressable onPress={handleCancel} style={[styles.btn, styles.btnCancel]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancel birthday selection"
+            onPress={handleCancel}
+            style={[styles.btn, styles.btnCancel]}
+          >
             <Text style={{ color: '#666' }}>Cancel</Text>
           </Pressable>
-          <Pressable onPress={handleConfirm} style={[styles.btn, styles.btnDone]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Confirm birthday selection"
+            onPress={handleConfirm}
+            style={[styles.btn, styles.btnDone]}
+          >
             <Text style={{ color: '#fff', fontWeight: '600' }}>Done</Text>
           </Pressable>
         </View>
@@ -167,6 +186,8 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={value ? `Change birthday, currently ${value}` : 'Select birthday'}
       onPress={handleOpen}
       style={{
         borderColor: '#79747E',
