@@ -87,7 +87,11 @@ export default function NewInteractionScreen() {
         {selectedContacts.length > 0 ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {selectedContacts.map((contact) => (
-              <Chip key={contact.id} onClose={() => toggleContact(contact.id)}>
+              <Chip
+                key={contact.id}
+                onClose={() => toggleContact(contact.id)}
+                accessibilityLabel={`Remove ${contact.name} from this interaction`}
+              >
                 {contact.name}
               </Chip>
             ))}
@@ -106,6 +110,8 @@ export default function NewInteractionScreen() {
               <Chip
                 key={contact.id}
                 selected={checked}
+                accessibilityState={{ selected: checked }}
+                accessibilityLabel={`${checked ? 'Deselect' : 'Select'} ${contact.name} for this interaction`}
                 onPress={() => toggleContact(contact.id)}
                 showSelectedCheck={checked}
               >
@@ -123,7 +129,13 @@ export default function NewInteractionScreen() {
         <Text variant="titleMedium">Type</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {INTERACTION_TYPES.map((type) => (
-            <Chip key={type} selected={interactionType === type} onPress={() => setInteractionType(type)}>
+            <Chip
+              key={type}
+              selected={interactionType === type}
+              accessibilityState={{ selected: interactionType === type }}
+              accessibilityLabel={`Set interaction type to ${type}`}
+              onPress={() => setInteractionType(type)}
+            >
               {type}
             </Chip>
           ))}

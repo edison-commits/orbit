@@ -117,7 +117,11 @@ export default function EditContactScreen() {
 
       {/* Photo */}
       <View style={styles_edit.avatarSection}>
-        <Pressable onPress={handlePickPhoto}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={photoUri ? 'Change contact photo' : 'Add contact photo'}
+          onPress={handlePickPhoto}
+        >
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles_edit.avatarPhoto} />
           ) : (
@@ -147,7 +151,13 @@ export default function EditContactScreen() {
         <Text variant="titleMedium">Relationship</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {RELATIONSHIP_TYPES.map((option) => (
-            <Chip key={option} selected={relationshipType === option} onPress={() => setRelationshipType(option)}>
+            <Chip
+              key={option}
+              selected={relationshipType === option}
+              accessibilityState={{ selected: relationshipType === option }}
+              accessibilityLabel={`Set relationship type to ${option}`}
+              onPress={() => setRelationshipType(option)}
+            >
               {option}
             </Chip>
           ))}
@@ -218,7 +228,13 @@ export default function EditContactScreen() {
         <Text variant="bodyMedium">Adjust how often Orbit brings them back to the top.</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {[7, 14, 30, 60, 90].map((option) => (
-            <Chip key={option} selected={cadence === option} onPress={() => setCadence(option)}>
+            <Chip
+              key={option}
+              selected={cadence === option}
+              accessibilityState={{ selected: cadence === option }}
+              accessibilityLabel={`Check in every ${option} days`}
+              onPress={() => setCadence(option)}
+            >
               Every {option} days
             </Chip>
           ))}

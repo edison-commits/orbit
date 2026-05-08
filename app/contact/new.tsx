@@ -130,6 +130,8 @@ export default function NewContactScreen() {
             <Chip
               key={option}
               selected={relationshipType === option}
+              accessibilityState={{ selected: relationshipType === option }}
+              accessibilityLabel={`Set relationship type to ${option}`}
               onPress={() => setRelationshipType(option)}
             >
               {option}
@@ -146,6 +148,8 @@ export default function NewContactScreen() {
             <Chip
               key={option}
               selected={cadence === option}
+              accessibilityState={{ selected: cadence === option }}
+              accessibilityLabel={`Check in every ${option} days`}
               onPress={() => setCadence(option)}
             >
               {option}d
@@ -155,7 +159,13 @@ export default function NewContactScreen() {
       </View>
 
       {/* ── More details (expandable) ───────────────── */}
-      <Pressable onPress={() => setShowExtras(!showExtras)} style={styles.extrasToggle}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showExtras }}
+        accessibilityLabel={showExtras ? 'Hide additional contact details' : 'Show additional contact details'}
+        onPress={() => setShowExtras(!showExtras)}
+        style={styles.extrasToggle}
+      >
         <Text variant="titleMedium" style={{ color: orbitTheme.colors.primary }}>
           {showExtras ? '− Less' : '+ More details'}
         </Text>

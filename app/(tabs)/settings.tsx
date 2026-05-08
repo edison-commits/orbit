@@ -262,6 +262,8 @@ export default function SettingsScreen() {
               <Chip
                 key={days}
                 selected={defaultCadence === days}
+                accessibilityState={{ selected: defaultCadence === days }}
+                accessibilityLabel={`Set default check-in cadence to ${CADENCE_LABELS[days] ?? `${days} days`}`}
                 onPress={() => handleCadenceChange(days)}
                 style={defaultCadence === days ? { backgroundColor: themeColors.primaryContainer } : {}}
                 textStyle={defaultCadence === days ? { color: themeColors.onPrimaryContainer } : {}}
@@ -282,6 +284,8 @@ export default function SettingsScreen() {
               <Chip
                 key={mode}
                 selected={themeMode === mode}
+                accessibilityState={{ selected: themeMode === mode }}
+                accessibilityLabel={`Use ${mode} appearance`}
                 onPress={() => setThemeMode(mode)}
                 style={themeMode === mode ? { backgroundColor: themeColors.primaryContainer } : {}}
                 textStyle={themeMode === mode ? { color: themeColors.onPrimaryContainer } : {}}
@@ -308,6 +312,8 @@ export default function SettingsScreen() {
               <Chip
                 key={t.value}
                 selected={feedbackType === t.value}
+                accessibilityState={{ selected: feedbackType === t.value }}
+                accessibilityLabel={`Set feedback type to ${t.label}`}
                 onPress={() => setFeedbackType(t.value)}
                 style={feedbackType === t.value ? { backgroundColor: themeColors.primaryContainer } : {}}
                 textStyle={feedbackType === t.value ? { color: themeColors.onPrimaryContainer } : {}}
@@ -387,6 +393,7 @@ export default function SettingsScreen() {
                 <IconButton
                   icon="close"
                   size={16}
+                  accessibilityLabel={`Delete ${item.type} feedback from ${timeAgo(item.created_at)}`}
                   onPress={() => handleDeleteFeedback(item.id)}
                   style={{ margin: 0 }}
                 />
