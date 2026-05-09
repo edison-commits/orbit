@@ -56,6 +56,8 @@ export default function ContactDetailScreen() {
       headerRight: () => (
         <Link href={{ pathname: '/interaction/new', params: { contactId: id } }} asChild>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log an interaction"
             hitSlop={12}
             style={({ pressed }) => [{ marginRight: 8, padding: 4 }, pressed && { opacity: 0.6 }]}
           >
@@ -227,16 +229,28 @@ export default function ContactDetailScreen() {
             <View style={styles.infoRow}>
               <Icon source="phone" size={18} color={colors.onSurfaceVariant} />
               <Text variant="bodyMedium" style={{ flex: 1 }}>{contact.phone}</Text>
-              <Pressable onPress={() => Linking.openURL(`tel:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Call ${contact.name}`}
+                onPress={() => Linking.openURL(`tel:${contact.phone}`)}
+                style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}
+              >
                 <Icon source="phone-outgoing" size={18} color={colors.primary} />
               </Pressable>
-              <Pressable onPress={() => Linking.openURL(`sms:${contact.phone}`)} style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Text ${contact.name}`}
+                onPress={() => Linking.openURL(`sms:${contact.phone}`)}
+                style={({ pressed }) => [{ padding: 4 }, pressed && { opacity: 0.5 }]}
+              >
                 <Icon source="message-text" size={18} color={colors.primary} />
               </Pressable>
             </View>
           ) : null}
           {contact.email ? (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Email ${contact.name}`}
               onPress={() => Linking.openURL(`mailto:${contact.email}`)}
               style={({ pressed }) => [styles.infoRow, pressed && { opacity: 0.6 }]}
             >
@@ -300,6 +314,8 @@ export default function ContactDetailScreen() {
                 {entries.map(([platform, handle]) => (
                   <Pressable
                     key={platform}
+                    accessibilityRole="link"
+                    accessibilityLabel={`Open ${contact.name}'s ${platform} profile`}
                     onPress={() => openSocial(platform, handle)}
                     style={({ pressed }) => [
                       styles.socialRow,
@@ -353,12 +369,19 @@ export default function ContactDetailScreen() {
                 compact
                 onPress={() => handleSnooze(option.days)}
                 disabled={isSaving}
+                accessibilityLabel={`Snooze reminders for ${contact.name} ${option.label.toLowerCase()}`}
               >
                 {option.label}
               </Button>
             ))}
             {contact.cadenceSnoozedUntil ? (
-              <Button mode="text" compact onPress={handleClearSnooze} disabled={isSaving}>
+              <Button
+                mode="text"
+                compact
+                onPress={handleClearSnooze}
+                disabled={isSaving}
+                accessibilityLabel={`Clear snooze for ${contact.name}`}
+              >
                 Clear
               </Button>
             ) : null}
@@ -413,6 +436,12 @@ export default function ContactDetailScreen() {
                 compact
                 onPress={() => setShowAllInteractions(!showAllInteractions)}
                 icon={showAllInteractions ? 'chevron-up' : 'chevron-down'}
+                accessibilityState={{ expanded: showAllInteractions }}
+                accessibilityLabel={
+                  showAllInteractions
+                    ? `Show fewer interactions for ${contact.name}`
+                    : `Show all ${recentInteractions.length} interactions for ${contact.name}`
+                }
               >
                 {showAllInteractions ? 'Show less' : `Show all ${recentInteractions.length} interactions`}
               </Button>
@@ -424,12 +453,17 @@ export default function ContactDetailScreen() {
       {/* Actions */}
       <View style={{ gap: 8, marginTop: 4 }}>
         <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
-          <Button mode="contained" disabled={contact.isArchived} icon="plus">
+          <Button
+            mode="contained"
+            disabled={contact.isArchived}
+            icon="plus"
+            accessibilityLabel={`Log an interaction with ${contact.name}`}
+          >
             Log interaction
           </Button>
         </Link>
         <Link href={`/contact/edit/${contact.id}`} asChild>
-          <Button mode="outlined" icon="pencil">
+          <Button mode="outlined" icon="pencil" accessibilityLabel={`Edit ${contact.name}`}>
             Edit person
           </Button>
         </Link>
@@ -440,6 +474,7 @@ export default function ContactDetailScreen() {
             onPress={handlePauseToggle}
             disabled={isSaving}
             style={{ flex: 1 }}
+            accessibilityLabel={`${contact.isPaused ? 'Resume' : 'Pause'} reminders for ${contact.name}`}
           >
             {contact.isPaused ? 'Resume' : 'Pause'}
           </Button>
@@ -449,6 +484,7 @@ export default function ContactDetailScreen() {
             onPress={handleArchiveToggle}
             disabled={isSaving}
             style={{ flex: 1 }}
+            accessibilityLabel={`${contact.isArchived ? 'Restore' : 'Archive'} ${contact.name}`}
           >
             {contact.isArchived ? 'Restore' : 'Archive'}
           </Button>
