@@ -60,7 +60,9 @@ export default function PeopleScreen() {
         return (
           <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
             <Link href="/interaction/new" asChild>
-              <Button mode="outlined">Quick log interaction</Button>
+              <Button mode="outlined" accessibilityLabel="Quick log an interaction">
+                Quick log interaction
+              </Button>
             </Link>
           </View>
         );
@@ -152,6 +154,7 @@ export default function PeopleScreen() {
     <View style={{ paddingHorizontal: 16, gap: 12 }}>
       <Searchbar
         placeholder="Search by name…"
+        accessibilityLabel="Search people by name"
         value={search}
         onChangeText={setSearch}
         style={styles.searchbar}
@@ -193,7 +196,7 @@ export default function PeopleScreen() {
           </Text>
           {!search && (
             <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
-              <Button mode="contained" icon="plus">
+              <Button mode="contained" icon="plus" accessibilityLabel="Add your first person">
                 Add your first person
               </Button>
             </Link>

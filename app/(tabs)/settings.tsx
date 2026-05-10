@@ -335,6 +335,7 @@ export default function SettingsScreen() {
             }
             value={feedbackMessage}
             onChangeText={setFeedbackMessage}
+            accessibilityLabel="Feedback message"
             multiline
             numberOfLines={3}
             style={{ minHeight: 80 }}
@@ -347,6 +348,7 @@ export default function SettingsScreen() {
               onPress={handleSubmitFeedback}
               loading={isSubmitting}
               disabled={isSubmitting}
+              accessibilityLabel="Save feedback locally"
               style={{ flex: 1 }}
             >
               Save locally
@@ -355,6 +357,7 @@ export default function SettingsScreen() {
               mode="outlined"
               onPress={handleEmailFeedback}
               disabled={!feedbackMessage.trim()}
+              accessibilityLabel="Email feedback"
             >
               Email
             </Button>
@@ -424,6 +427,7 @@ export default function SettingsScreen() {
                   <Button
                     mode="contained"
                     compact
+                    accessibilityLabel="Learn more about Orbit Pro"
                     onPress={() =>
                       Alert.alert(
                         'Orbit Pro',
@@ -450,12 +454,14 @@ export default function SettingsScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry
+                accessibilityLabel="Supabase service role key"
               />
               <Button
                 mode="contained"
                 onPress={handleSaveApiKey}
                 loading={isSavingKey}
                 disabled={isSavingKey || !apiKeyInput.trim()}
+                accessibilityLabel="Start Orbit Pro trial with Supabase key"
               >
                 Start 30-day free trial
               </Button>
@@ -469,10 +475,10 @@ export default function SettingsScreen() {
                 <Text variant="labelMedium" style={{ color: themeColors.primary, fontWeight: '600' }}>✅ Pro active</Text>
                 <Text variant="bodySmall" style={{ color: themeColors.outline }}>· 30 days free</Text>
                 <View style={{ flex: 1 }} />
-                <Button mode="text" compact onPress={handleTestConnection}>
+                <Button mode="text" compact onPress={handleTestConnection} accessibilityLabel="Test cloud backup connection">
                   Test
                 </Button>
-                <Button mode="text" compact textColor={themeColors.error} onPress={handleClearApiKey}>
+                <Button mode="text" compact textColor={themeColors.error} onPress={handleClearApiKey} accessibilityLabel="Remove cloud backup API key">
                   Remove
                 </Button>
               </View>
@@ -485,10 +491,15 @@ export default function SettingsScreen() {
                   disabled={isBackingUp}
                   style={{ flex: 1 }}
                   icon="cloud-upload"
+                  accessibilityLabel="Back up Orbit data now"
                 >
                   {isBackingUp ? 'Uploading…' : 'Backup now'}
                 </Button>
-                <Button mode="outlined" onPress={handleShowBackups}>
+                <Button
+                  mode="outlined"
+                  onPress={handleShowBackups}
+                  accessibilityLabel={showBackupList ? 'Hide cloud backup list' : 'Show cloud backups to restore'}
+                >
                   {showBackupList ? 'Hide' : 'Restore'}
                 </Button>
               </View>
@@ -516,6 +527,7 @@ export default function SettingsScreen() {
                           loading={isRestoring}
                           onPress={() => handleRestore(b.name)}
                           disabled={isRestoring}
+                          accessibilityLabel={`Restore backup ${b.name}`}
                         >
                           Restore
                         </Button>
@@ -543,6 +555,7 @@ export default function SettingsScreen() {
             style={{ borderColor: themeColors.error }}
             onPress={handleResetData}
             loading={isResetting}
+            accessibilityLabel="Reset all Orbit data"
           >
             Reset all data
           </Button>

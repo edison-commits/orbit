@@ -99,6 +99,7 @@ export default function NewInteractionScreen() {
         ) : null}
         <Searchbar
           placeholder="Search people..."
+          accessibilityLabel="Search people to add to this interaction"
           value={contactSearch}
           onChangeText={setContactSearch}
           style={{ marginVertical: 4 }}
@@ -144,6 +145,7 @@ export default function NewInteractionScreen() {
 
       <TextInput
         label="Note"
+        accessibilityLabel="Interaction note"
         value={note}
         onChangeText={setNote}
         multiline
@@ -155,7 +157,12 @@ export default function NewInteractionScreen() {
         {error ?? ''}
       </HelperText>
 
-      <Button mode="contained" onPress={handleSave} disabled={isSaving}>
+      <Button
+        mode="contained"
+        onPress={handleSave}
+        disabled={isSaving}
+        accessibilityLabel={`Save interaction${selectedContactIds.length > 1 ? ` for ${selectedContactIds.length} people` : ''}`}
+      >
         Save interaction{selectedContactIds.length > 1 ? ` for ${selectedContactIds.length}` : ''}
       </Button>
     </ScrollView>
