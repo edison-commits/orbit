@@ -33,6 +33,7 @@ export async function getServiceKey(): Promise<string | null> {
 
 export async function setServiceKey(key: string): Promise<void> {
   await SecureStore.setItemAsync(SERVICE_KEY_REF, key);
+  _supabase = null;
 }
 
 export async function clearServiceKey(): Promise<void> {
