@@ -76,26 +76,35 @@ export default function EditContactScreen() {
   async function handleSave() {
     if (!contact) return;
 
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('A name is required to save.');
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError(null);
 
       const social: SocialData = {};
-      if (instagram) social.instagram = instagram;
-      if (twitter) social.twitter = twitter;
-      if (linkedin) social.linkedin = linkedin;
+      const trimmedInstagram = instagram.trim();
+      const trimmedTwitter = twitter.trim();
+      const trimmedLinkedin = linkedin.trim();
+      if (trimmedInstagram) social.instagram = trimmedInstagram;
+      if (trimmedTwitter) social.twitter = trimmedTwitter;
+      if (trimmedLinkedin) social.linkedin = trimmedLinkedin;
 
       await updateContact({
         id: contact.id,
-        name,
-        nickname: nickname || null,
+        name: trimmedName,
+        nickname: nickname.trim() || null,
         photoUri,
         relationshipType,
         cadence,
-        notes: notes || null,
+        notes: notes.trim() || null,
         birthday: birthday || null,
-        phone: phone || null,
-        email: email || null,
+        phone: phone.trim() || null,
+        email: email.trim() || null,
         socialJson: Object.keys(social).length > 0 ? JSON.stringify(social) : null,
       });
       router.replace(`/contact/${contact.id}`);
@@ -254,7 +263,7 @@ export default function EditContactScreen() {
         {error ?? ''}
       </HelperText>
 
-      <Button mode="contained" onPress={handleSave} disabled={isSaving}>
+      <Button mode="contained" onPress={handleSave} disabled={isSaving || name.trim().length === 0}>
         Save changes
       </Button>
     </ScrollView>
