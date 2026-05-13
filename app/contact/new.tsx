@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
 import { useTheme } from 'react-native-paper';
 import { createContact } from '@/features/contacts/contactService';
+import { settingsService } from '@/features/settings/settingsService';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 import { RELATIONSHIP_TYPES, CADENCE_OPTIONS_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
 import { orbitTheme } from '@/lib/theme';
@@ -27,7 +28,7 @@ export default function NewContactScreen() {
   const [name, setName] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [relationshipType, setRelationshipType] = useState(DEFAULT_RELATIONSHIP_TYPE);
-  const [cadence, setCadence] = useState(30);
+  const [cadence, setCadence] = useState(() => settingsService.getDefaultCadence());
   const [showExtras, setShowExtras] = useState(false);
   const [nickname, setNickname] = useState('');
   const [phone, setPhone] = useState('');
