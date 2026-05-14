@@ -61,9 +61,12 @@ export default function NewContactScreen() {
       setError(null);
 
       const social: Record<string, string> = {};
-      if (instagram) social.instagram = instagram;
-      if (twitter) social.twitter = twitter;
-      if (linkedin) social.linkedin = linkedin;
+      const trimmedInstagram = instagram.trim();
+      const trimmedTwitter = twitter.trim();
+      const trimmedLinkedin = linkedin.trim();
+      if (trimmedInstagram) social.instagram = trimmedInstagram;
+      if (trimmedTwitter) social.twitter = trimmedTwitter;
+      if (trimmedLinkedin) social.linkedin = trimmedLinkedin;
 
       const contact = await createContact({
         name: name.trim(),
