@@ -1,4 +1,4 @@
-import { addDays, differenceInCalendarDays, format, isBefore, parse, startOfDay } from 'date-fns';
+import { addDays, differenceInCalendarDays, format, isBefore, startOfDay } from 'date-fns';
 import { getEffectiveDueAt } from '@/lib/reminders';
 import { DUE_COLORS } from '@/lib/theme';
 import type { DueState } from '@/types/models';
@@ -76,60 +76,67 @@ export function formatDueLabel(nextDueAt: string | null | undefined, now = new D
   return `Due in ${daysUntil} days`;
 }
 
+type ParsedBirthday = {
+  date: Date;
+  hasYear: boolean;
+  monthIndex: number;
+  day: number;
+};
+
+function isValidMonthDay(year: number, monthIndex: number, day: number) {
+  const date = new Date(year, monthIndex, day);
+  return date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day;
+}
+
+function parseBirthday(value: string | null | undefined, referenceDate = new Date()): ParsedBirthday | null {
+  if (!value) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const monthIndex = month - 1;
+    if (!isValidMonthDay(year, monthIndex, day)) return null;
+    return { date: new Date(year, monthIndex, day), hasYear: true, monthIndex, day };
+  }
+
+  if (/^\d{1,2}[-/]\d{1,2}$/.test(value)) {
+    const [month, day] = value.split(/[-/]/).map(Number);
+    const monthIndex = month - 1;
+    if (!isValidMonthDay(2000, monthIndex, day)) return null;
+    return { date: new Date(referenceDate.getFullYear(), monthIndex, day), hasYear: false, monthIndex, day };
+  }
+
+  return null;
+}
+
 /** Format birthday string (e.g. "March 26" or "March 26 · 32 years old") */
 export function formatBirthday(value: string | null | undefined): string {
   if (!value) return '—';
-  // Accept MM-DD, MM/DD, or YYYY-MM-DD formats
-  let parsed: Date;
-  try {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      parsed = new Date(value + 'T00:00:00');
-    } else if (/^\d{1,2}[-/]\d{1,2}$/.test(value)) {
-      // MM-DD or MM/DD — use current year
-      const [m, d] = value.split(/[-/]/).map(Number);
-      parsed = new Date(new Date().getFullYear(), m - 1, d);
-    } else {
-      return value;
-    }
-  } catch {
-    return value;
-  }
-  const monthDay = format(parsed, 'MMMM d');
-  // Compute age if a full YYYY-MM-DD was provided
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+
+  const parsed = parseBirthday(value);
+  if (!parsed) return value;
+
+  const monthDay = format(new Date(2000, parsed.monthIndex, parsed.day), 'MMMM d');
+  if (parsed.hasYear) {
     const today = new Date();
-    const birthDate = new Date(value + 'T00:00:00');
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    let age = today.getFullYear() - parsed.date.getFullYear();
+    const monthDelta = today.getMonth() - parsed.date.getMonth();
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < parsed.date.getDate())) age--;
     if (age > 0) return `${monthDay} · ${age} years old`;
   }
+
   return monthDay;
 }
 
 /** Returns days until the next occurrence of a birthday, or null if unparseable. */
 export function getDaysUntilBirthday(value: string | null | undefined): number | null {
-  if (!value) return null;
-  try {
-    const today = new Date();
-    let month: number, day: number;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const parts = value.split('-').map(Number);
-      month = parts[1] - 1;
-      day = parts[2];
-    } else if (/^\d{1,2}[-/]\d{1,2}$/.test(value)) {
-      const parts = value.split(/[-/]/).map(Number);
-      month = parts[0] - 1;
-      day = parts[1];
-    } else {
-      return null;
-    }
-    const thisYear = new Date(today.getFullYear(), month, day);
-    const nextOccurrence = thisYear >= today ? thisYear : new Date(today.getFullYear() + 1, month, day);
-    return differenceInCalendarDays(startOfDay(nextOccurrence), startOfDay(today));
-  } catch {
-    return null;
-  }
+  const today = new Date();
+  const parsed = parseBirthday(value, today);
+  if (!parsed) return null;
+
+  const todayStart = startOfDay(today);
+  const thisYear = new Date(today.getFullYear(), parsed.monthIndex, parsed.day);
+  const nextOccurrence = startOfDay(thisYear) >= todayStart ? thisYear : new Date(today.getFullYear() + 1, parsed.monthIndex, parsed.day);
+  return differenceInCalendarDays(startOfDay(nextOccurrence), todayStart);
 }
 
 /** Short relative label for how long since last contact, for card use */
