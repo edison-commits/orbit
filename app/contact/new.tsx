@@ -16,6 +16,7 @@ import { createContact } from '@/features/contacts/contactService';
 import { settingsService } from '@/features/settings/settingsService';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 import { RELATIONSHIP_TYPES, CADENCE_OPTIONS_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
+import { normalizeSocialHandle } from '@/lib/social';
 import { orbitTheme } from '@/lib/theme';
 
 // Lazy-load image picker to avoid bundling it until the form is opened
@@ -61,9 +62,9 @@ export default function NewContactScreen() {
       setError(null);
 
       const social: Record<string, string> = {};
-      const trimmedInstagram = instagram.trim();
-      const trimmedTwitter = twitter.trim();
-      const trimmedLinkedin = linkedin.trim();
+      const trimmedInstagram = normalizeSocialHandle('instagram', instagram);
+      const trimmedTwitter = normalizeSocialHandle('twitter', twitter);
+      const trimmedLinkedin = normalizeSocialHandle('linkedin', linkedin);
       if (trimmedInstagram) social.instagram = trimmedInstagram;
       if (trimmedTwitter) social.twitter = trimmedTwitter;
       if (trimmedLinkedin) social.linkedin = trimmedLinkedin;

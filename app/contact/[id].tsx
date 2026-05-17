@@ -21,6 +21,7 @@ import {
   getDaysUntilBirthday,
 } from '@/lib/dates';
 import { SNOOZE_OPTIONS } from '@/lib/reminders';
+import { formatSocialHandle, getSocialUrls } from '@/lib/social';
 import type { InteractionTimelineItem } from '@/types/models';
 
 const INTERACTION_ICONS: Record<string, string> = {
@@ -285,16 +286,11 @@ export default function ContactDetailScreen() {
           if (entries.length === 0) return null;
 
           const openSocial = (platform: string, handle: string) => {
-            const clean = handle.replace('@', '').trim();
-            const deepUrls: Record<string, string> = {
-              instagram: `instagram://user?username=${clean}`,
-              twitter: `https://x.com/${clean}`,
-              linkedin: `https://linkedin.com/in/${clean}`,
-            };
-            const webUrl = `https://${platform}.com/${clean}`;
-            const preferred = deepUrls[platform] ?? webUrl;
-            Linking.openURL(preferred).catch(() => {
-              Linking.openURL(webUrl);
+            if (platform !== 'instagram' && platform !== 'twitter' && platform !== 'linkedin') return;
+            const urls = getSocialUrls(platform, handle);
+            if (!urls) return;
+            Linking.openURL(urls.preferred).catch(() => {
+              Linking.openURL(urls.fallback);
             });
           };
 
@@ -324,7 +320,9 @@ export default function ContactDetailScreen() {
                   >
                     <Icon source={platformIcon[platform] ?? 'link'} size={18} color={colors.primary} />
                     <Text variant="bodyMedium" style={{ color: colors.primary, flex: 1 }}>
-                      @{handle.replace('@', '')}
+                      {platform === 'instagram' || platform === 'twitter' || platform === 'linkedin'
+                        ? formatSocialHandle(platform, handle)
+                        : handle}
                     </Text>
                     <Icon source="open-in-new" size={14} color={colors.outline} />
                   </Pressable>

@@ -5,6 +5,7 @@ import { Button, Chip, Divider, HelperText, Text, TextInput, useTheme } from 're
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
+import { normalizeSocialHandle } from '@/lib/social';
 import { orbitTheme } from '@/lib/theme';
 import type { Contact } from '@/types/models';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
@@ -87,9 +88,9 @@ export default function EditContactScreen() {
       setError(null);
 
       const social: SocialData = {};
-      const trimmedInstagram = instagram.trim();
-      const trimmedTwitter = twitter.trim();
-      const trimmedLinkedin = linkedin.trim();
+      const trimmedInstagram = normalizeSocialHandle('instagram', instagram);
+      const trimmedTwitter = normalizeSocialHandle('twitter', twitter);
+      const trimmedLinkedin = normalizeSocialHandle('linkedin', linkedin);
       if (trimmedInstagram) social.instagram = trimmedInstagram;
       if (trimmedTwitter) social.twitter = trimmedTwitter;
       if (trimmedLinkedin) social.linkedin = trimmedLinkedin;
