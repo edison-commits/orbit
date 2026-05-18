@@ -39,6 +39,7 @@ export function normalizeSocialHandle(platform: SocialPlatform, value: string | 
 
 export function formatSocialHandle(platform: SocialPlatform, value: string) {
   const handle = normalizeSocialHandle(platform, value);
+  if (!handle) return '';
   return platform === 'linkedin' ? handle : `@${handle}`;
 }
 
@@ -46,14 +47,15 @@ export function getSocialUrls(platform: SocialPlatform, value: string) {
   const handle = normalizeSocialHandle(platform, value);
   if (!handle) return null;
 
+  const encodedHandle = encodeURIComponent(handle);
   const webUrls: Record<SocialPlatform, string> = {
-    instagram: `https://instagram.com/${handle}`,
-    twitter: `https://x.com/${handle}`,
-    linkedin: `https://linkedin.com/in/${handle}`,
+    instagram: `https://instagram.com/${encodedHandle}`,
+    twitter: `https://x.com/${encodedHandle}`,
+    linkedin: `https://linkedin.com/in/${encodedHandle}`,
   };
 
   return {
-    preferred: platform === 'instagram' ? `instagram://user?username=${handle}` : webUrls[platform],
+    preferred: platform === 'instagram' ? `instagram://user?username=${encodedHandle}` : webUrls[platform],
     fallback: webUrls[platform],
   };
 }
