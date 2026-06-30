@@ -13,8 +13,10 @@ import { router } from 'expo-router';
 import { Button, Chip, Divider, HelperText, Text, TextInput } from 'react-native-paper';
 import { useTheme } from 'react-native-paper';
 import { createContact } from '@/features/contacts/contactService';
+import { settingsService } from '@/features/settings/settingsService';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 import { RELATIONSHIP_TYPES, CADENCE_OPTIONS_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
+import { normalizeSocialHandle } from '@/lib/social';
 import { orbitTheme } from '@/lib/theme';
 
 // Lazy-load image picker to avoid bundling it until the form is opened
@@ -27,7 +29,7 @@ export default function NewContactScreen() {
   const [name, setName] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [relationshipType, setRelationshipType] = useState(DEFAULT_RELATIONSHIP_TYPE);
-  const [cadence, setCadence] = useState(30);
+  const [cadence, setCadence] = useState(() => settingsService.getDefaultCadence());
   const [showExtras, setShowExtras] = useState(false);
   const [nickname, setNickname] = useState('');
   const [phone, setPhone] = useState('');
@@ -60,9 +62,12 @@ export default function NewContactScreen() {
       setError(null);
 
       const social: Record<string, string> = {};
-      if (instagram) social.instagram = instagram;
-      if (twitter) social.twitter = twitter;
-      if (linkedin) social.linkedin = linkedin;
+      const trimmedInstagram = normalizeSocialHandle('instagram', instagram);
+      const trimmedTwitter = normalizeSocialHandle('twitter', twitter);
+      const trimmedLinkedin = normalizeSocialHandle('linkedin', linkedin);
+      if (trimmedInstagram) social.instagram = trimmedInstagram;
+      if (trimmedTwitter) social.twitter = trimmedTwitter;
+      if (trimmedLinkedin) social.linkedin = trimmedLinkedin;
 
       const contact = await createContact({
         name: name.trim(),
@@ -130,6 +135,8 @@ export default function NewContactScreen() {
             <Chip
               key={option}
               selected={relationshipType === option}
+              accessibilityState={{ selected: relationshipType === option }}
+              accessibilityLabel={`Set relationship type to ${option}`}
               onPress={() => setRelationshipType(option)}
             >
               {option}
@@ -146,6 +153,8 @@ export default function NewContactScreen() {
             <Chip
               key={option}
               selected={cadence === option}
+              accessibilityState={{ selected: cadence === option }}
+              accessibilityLabel={`Check in every ${option} days`}
               onPress={() => setCadence(option)}
             >
               {option}d
@@ -155,7 +164,13 @@ export default function NewContactScreen() {
       </View>
 
       {/* ── More details (expandable) ───────────────── */}
-      <Pressable onPress={() => setShowExtras(!showExtras)} style={styles.extrasToggle}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showExtras }}
+        accessibilityLabel={showExtras ? 'Hide additional contact details' : 'Show additional contact details'}
+        onPress={() => setShowExtras(!showExtras)}
+        style={styles.extrasToggle}
+      >
         <Text variant="titleMedium" style={{ color: orbitTheme.colors.primary }}>
           {showExtras ? '− Less' : '+ More details'}
         </Text>

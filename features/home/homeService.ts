@@ -2,20 +2,33 @@ import { contactsRepository, type ContactsListItem } from '@/db/repositories/con
 import { formatDueLabel, getDaysUntilBirthday } from '@/lib/dates';
 import type { DueState } from '@/types/models';
 
-export interface HomeAggregate {
-  dueState: DueState;
+type StandardHomeDueState = Exclude<DueState, 'birthday'>;
+export type BirthdayContactListItem = ContactsListItem & { birthdayDays: number };
+
+export interface StandardHomeAggregate {
+  dueState: StandardHomeDueState;
   title: string;
   count: number;
   summary: string;
   contacts: ContactsListItem[];
 }
 
-export interface BirthdayAggregate {
+export interface BirthdayHomeAggregate {
+  dueState: 'birthday';
+  title: string;
   count: number;
-  contacts: Array<ContactsListItem & { birthdayDays: number }>;
+  summary: string;
+  contacts: BirthdayContactListItem[];
 }
 
-function buildSummary(dueState: DueState, count: number, contacts: ContactsListItem[]) {
+export type HomeAggregate = StandardHomeAggregate | BirthdayHomeAggregate;
+
+export interface BirthdayAggregate {
+  count: number;
+  contacts: BirthdayContactListItem[];
+}
+
+function buildSummary(dueState: StandardHomeDueState, count: number, contacts: ContactsListItem[]) {
   if (count === 0) {
     if (dueState === 'overdue') return 'Nobody is slipping right now.';
     if (dueState === 'due') return 'Nothing needs a touchpoint today.';
@@ -42,17 +55,18 @@ export function getHomeAggregates(): HomeAggregate[] {
 
   // Birthday section: contacts with birthdays in the next 30 days
   // Identify them first so we can exclude from regular sections (no duplicate entries)
-  const birthdayContacts = contacts
+  const allBirthdayContacts = contacts
     .filter((c) => {
       if (!c.birthday) return false;
       const days = getDaysUntilBirthday(c.birthday);
       return days !== null && days >= 0 && days <= 30;
     })
     .map((c) => ({ ...c, birthdayDays: getDaysUntilBirthday(c.birthday)! }))
-    .sort((a, b) => a.birthdayDays - b.birthdayDays)
-    .slice(0, 5);
+    .sort((a, b) => a.birthdayDays - b.birthdayDays);
 
-  const birthdayContactIds = new Set(birthdayContacts.map((c) => c.id));
+  const birthdayContacts = allBirthdayContacts.slice(0, 5);
+
+  const birthdayContactIds = new Set(allBirthdayContacts.map((c) => c.id));
 
   // Regular (non-birthday) contacts for the main sections
   const regularContacts = contacts.filter((c) => !birthdayContactIds.has(c.id));
@@ -78,14 +92,15 @@ export function getHomeAggregates(): HomeAggregate[] {
     };
   });
 
-  if (birthdayContacts.length > 0) {
+  if (allBirthdayContacts.length > 0) {
     const names = birthdayContacts.map((c) => c.name).join(', ');
+    const birthdayCount = allBirthdayContacts.length;
     sections.push({
-      dueState: 'birthday' as DueState | 'birthday',
+      dueState: 'birthday',
       title: '🎂 Birthdays soon',
-      count: birthdayContacts.length,
+      count: birthdayCount,
       summary:
-        birthdayContacts.length === 1
+        birthdayCount === 1
           ? `${birthdayContacts[0].name}'s birthday is ${
               birthdayContacts[0].birthdayDays === 0
                 ? 'today!'
@@ -93,8 +108,10 @@ export function getHomeAggregates(): HomeAggregate[] {
                   ? 'tomorrow'
                   : `in ${birthdayContacts[0].birthdayDays} days`
             }`
-          : names,
-      contacts: birthdayContacts as ContactsListItem[],
+          : birthdayCount > birthdayContacts.length
+            ? `${names} +${birthdayCount - birthdayContacts.length} more`
+            : names,
+      contacts: birthdayContacts,
     });
   }
 

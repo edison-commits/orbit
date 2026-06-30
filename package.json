@@ -13,21 +13,22 @@
     "@supabase/supabase-js": "^2.100.1",
     "babel-preset-expo": "^55.0.12",
     "date-fns": "^4.1.0",
-    "expo": "~55.0.8",
-    "expo-constants": "^55.0.9",
-    "expo-dev-client": "^55.0.18",
-    "expo-image-picker": "^55.0.5",
-    "expo-linking": "^55.0.8",
-    "expo-notifications": "^55.0.13",
-    "expo-router": "^55.0.7",
-    "expo-secure-store": "~55.0.9",
-    "expo-sqlite": "^55.0.11",
-    "expo-status-bar": "~55.0.4",
+    "expo": "~55.0.27",
+    "expo-constants": "~55.0.16",
+    "expo-dev-client": "~55.0.36",
+    "expo-image-picker": "~55.0.21",
+    "expo-linking": "~55.0.16",
+    "expo-notifications": "~55.0.24",
+    "expo-router": "~55.0.16",
+    "expo-secure-store": "~55.0.15",
+    "expo-sqlite": "~55.0.17",
+    "expo-status-bar": "~55.0.6",
     "react": "19.2.0",
     "react-dom": "^19.2.0",
-    "react-native": "0.83.2",
+    "react-native": "0.83.6",
     "react-native-paper": "^5.15.0",
     "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.2",
     "zod": "^4.3.6",
@@ -37,5 +38,20 @@
     "@types/react": "~19.2.2",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@babel/core": "7.29.7",
+    "@react-native/dev-middleware": {
+      "ws": "7.5.11"
+    },
+    "metro": {
+      "ws": "7.5.11"
+    },
+    "react-devtools-core": {
+      "ws": "7.5.11"
+    },
+    "react-native": {
+      "ws": "7.5.11"
+    }
+  }
 }

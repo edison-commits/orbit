@@ -5,6 +5,7 @@ import { Button, Chip, Divider, HelperText, Text, TextInput, useTheme } from 're
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
+import { normalizeSocialHandle } from '@/lib/social';
 import { orbitTheme } from '@/lib/theme';
 import type { Contact } from '@/types/models';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
@@ -76,26 +77,35 @@ export default function EditContactScreen() {
   async function handleSave() {
     if (!contact) return;
 
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('A name is required to save.');
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError(null);
 
       const social: SocialData = {};
-      if (instagram) social.instagram = instagram;
-      if (twitter) social.twitter = twitter;
-      if (linkedin) social.linkedin = linkedin;
+      const trimmedInstagram = normalizeSocialHandle('instagram', instagram);
+      const trimmedTwitter = normalizeSocialHandle('twitter', twitter);
+      const trimmedLinkedin = normalizeSocialHandle('linkedin', linkedin);
+      if (trimmedInstagram) social.instagram = trimmedInstagram;
+      if (trimmedTwitter) social.twitter = trimmedTwitter;
+      if (trimmedLinkedin) social.linkedin = trimmedLinkedin;
 
       await updateContact({
         id: contact.id,
-        name,
-        nickname: nickname || null,
+        name: trimmedName,
+        nickname: nickname.trim() || null,
         photoUri,
         relationshipType,
         cadence,
-        notes: notes || null,
+        notes: notes.trim() || null,
         birthday: birthday || null,
-        phone: phone || null,
-        email: email || null,
+        phone: phone.trim() || null,
+        email: email.trim() || null,
         socialJson: Object.keys(social).length > 0 ? JSON.stringify(social) : null,
       });
       router.replace(`/contact/${contact.id}`);
@@ -117,7 +127,11 @@ export default function EditContactScreen() {
 
       {/* Photo */}
       <View style={styles_edit.avatarSection}>
-        <Pressable onPress={handlePickPhoto}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={photoUri ? 'Change contact photo' : 'Add contact photo'}
+          onPress={handlePickPhoto}
+        >
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles_edit.avatarPhoto} />
           ) : (
@@ -147,7 +161,13 @@ export default function EditContactScreen() {
         <Text variant="titleMedium">Relationship</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {RELATIONSHIP_TYPES.map((option) => (
-            <Chip key={option} selected={relationshipType === option} onPress={() => setRelationshipType(option)}>
+            <Chip
+              key={option}
+              selected={relationshipType === option}
+              accessibilityState={{ selected: relationshipType === option }}
+              accessibilityLabel={`Set relationship type to ${option}`}
+              onPress={() => setRelationshipType(option)}
+            >
               {option}
             </Chip>
           ))}
@@ -218,7 +238,13 @@ export default function EditContactScreen() {
         <Text variant="bodyMedium">Adjust how often Orbit brings them back to the top.</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {[7, 14, 30, 60, 90].map((option) => (
-            <Chip key={option} selected={cadence === option} onPress={() => setCadence(option)}>
+            <Chip
+              key={option}
+              selected={cadence === option}
+              accessibilityState={{ selected: cadence === option }}
+              accessibilityLabel={`Check in every ${option} days`}
+              onPress={() => setCadence(option)}
+            >
               Every {option} days
             </Chip>
           ))}
@@ -238,7 +264,7 @@ export default function EditContactScreen() {
         {error ?? ''}
       </HelperText>
 
-      <Button mode="contained" onPress={handleSave} disabled={isSaving}>
+      <Button mode="contained" onPress={handleSave} disabled={isSaving || name.trim().length === 0}>
         Save changes
       </Button>
     </ScrollView>

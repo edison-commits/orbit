@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
-import { ActivityIndicator, View, Text, useColorScheme } from 'react-native';
+import { ActivityIndicator, View, Text, StatusBar, useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { runMigrations } from '@/db/client';
 import { seedDevData } from '@/db/repositories/devSeed';
@@ -17,6 +17,11 @@ export default function RootLayout() {
   const isDark =
     themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
   const activeTheme = isDark ? orbitDarkTheme : orbitTheme;
+
+  // Dark mode: use surface-colored headers for a native feel;
+  // Light mode: keep the branded purple header
+  const headerBg = isDark ? activeTheme.colors.surface : activeTheme.colors.primary;
+  const headerText = isDark ? activeTheme.colors.onSurface : activeTheme.colors.onPrimary;
 
   useEffect(() => {
     reminderService.configure();
@@ -72,18 +77,22 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={activeTheme}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={headerBg}
+      />
       <Stack
         screenOptions={{
           headerTitleAlign: 'left',
           headerStyle: {
-            backgroundColor: activeTheme.colors.primary,
+            backgroundColor: headerBg,
           },
           headerTitleStyle: {
-            color: activeTheme.colors.onPrimary,
+            color: headerText,
             fontWeight: '700' as const,
             fontSize: 18,
           },
-          headerTintColor: activeTheme.colors.onPrimary,
+          headerTintColor: headerText,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

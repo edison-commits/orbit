@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Text } from 'react-native-paper';
-import { orbitTheme } from '@/lib/theme';
+import { Text, useTheme } from 'react-native-paper';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -23,6 +22,7 @@ interface BirthdayPickerProps {
 }
 
 export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
+  const { colors } = useTheme();
   const [showPicker, setShowPicker] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(1);
   const [selectedDay, setSelectedDay] = useState<number>(1);
@@ -46,8 +46,9 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
 
   const handleOpen = () => {
     const { month, day, year } = parseValue();
+    const validDaysForBirthday = getDaysInMonth(month, year);
     setSelectedMonth(month);
-    setSelectedDay(Math.min(day, daysInMonth));
+    setSelectedDay(Math.min(day, validDaysForBirthday));
     setSelectedYear(year);
     setShowPicker(true);
   };
@@ -64,17 +65,23 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
 
   if (showPicker) {
     return (
-      <View style={styles.pickerContainer}>
-        <Text variant="labelMedium" style={{ color: '#666', marginBottom: 8 }}>
+      <View style={[styles.pickerContainer, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}>
+        <Text variant="labelMedium" style={{ color: colors.onSurfaceVariant, marginBottom: 8 }}>
           Birthday — tap to select
         </Text>
         <View style={styles.pickerRow}>
           <View style={styles.pickerCol}>
-            <Text variant="labelSmall" style={styles.colLabel}>Month</Text>
-            <ScrollView style={styles.scrollCol} showsVerticalScrollIndicator={false}>
+            <Text variant="labelSmall" style={[styles.colLabel, { color: colors.onSurfaceVariant }]}>Month</Text>
+            <ScrollView
+              style={[styles.scrollCol, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}
+              showsVerticalScrollIndicator={false}
+            >
               {MONTHS.map((m, i) => (
                 <Pressable
                   key={m}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${m} as birthday month`}
+                  accessibilityState={{ selected: selectedMonth === i + 1 }}
                   onPress={() => {
                     setSelectedMonth(i + 1);
                     const newDays = getDaysInMonth(i + 1, selectedYear);
@@ -82,13 +89,14 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
                   }}
                   style={[
                     styles.option,
-                    selectedMonth === i + 1 && styles.optionSelected,
+                    { borderBottomColor: colors.outlineVariant },
+                    selectedMonth === i + 1 && { backgroundColor: colors.primary },
                   ]}
                 >
                   <Text
                     style={[
                       styles.optionText,
-                      selectedMonth === i + 1 && styles.optionTextSelected,
+                      { color: selectedMonth === i + 1 ? colors.onPrimary : colors.onSurface },
                     ]}
                   >
                     {m.slice(0, 3)}
@@ -99,21 +107,28 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
           </View>
 
           <View style={styles.pickerCol}>
-            <Text variant="labelSmall" style={styles.colLabel}>Day</Text>
-            <ScrollView style={styles.scrollCol} showsVerticalScrollIndicator={false}>
+            <Text variant="labelSmall" style={[styles.colLabel, { color: colors.onSurfaceVariant }]}>Day</Text>
+            <ScrollView
+              style={[styles.scrollCol, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}
+              showsVerticalScrollIndicator={false}
+            >
               {days.map((d) => (
                 <Pressable
                   key={d}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${d} as birthday day`}
+                  accessibilityState={{ selected: selectedDay === d }}
                   onPress={() => setSelectedDay(d)}
                   style={[
                     styles.option,
-                    selectedDay === d && styles.optionSelected,
+                    { borderBottomColor: colors.outlineVariant },
+                    selectedDay === d && { backgroundColor: colors.primary },
                   ]}
                 >
                   <Text
                     style={[
                       styles.optionText,
-                      selectedDay === d && styles.optionTextSelected,
+                      { color: selectedDay === d ? colors.onPrimary : colors.onSurface },
                     ]}
                   >
                     {d}
@@ -124,11 +139,17 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
           </View>
 
           <View style={styles.pickerCol}>
-            <Text variant="labelSmall" style={styles.colLabel}>Year</Text>
-            <ScrollView style={styles.scrollCol} showsVerticalScrollIndicator={false}>
+            <Text variant="labelSmall" style={[styles.colLabel, { color: colors.onSurfaceVariant }]}>Year</Text>
+            <ScrollView
+              style={[styles.scrollCol, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}
+              showsVerticalScrollIndicator={false}
+            >
               {YEARS.map((y) => (
                 <Pressable
                   key={y}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${y} as birthday year`}
+                  accessibilityState={{ selected: selectedYear === y }}
                   onPress={() => {
                     setSelectedYear(y);
                     const newDays = getDaysInMonth(selectedMonth, y);
@@ -136,13 +157,14 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
                   }}
                   style={[
                     styles.option,
-                    selectedYear === y && styles.optionSelected,
+                    { borderBottomColor: colors.outlineVariant },
+                    selectedYear === y && { backgroundColor: colors.primary },
                   ]}
                 >
                   <Text
                     style={[
                       styles.optionText,
-                      selectedYear === y && styles.optionTextSelected,
+                      { color: selectedYear === y ? colors.onPrimary : colors.onSurface },
                     ]}
                   >
                     {y}
@@ -153,11 +175,21 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-          <Pressable onPress={handleCancel} style={[styles.btn, styles.btnCancel]}>
-            <Text style={{ color: '#666' }}>Cancel</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancel birthday selection"
+            onPress={handleCancel}
+            style={[styles.btn, styles.btnCancel, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline }]}
+          >
+            <Text style={{ color: colors.onSurfaceVariant }}>Cancel</Text>
           </Pressable>
-          <Pressable onPress={handleConfirm} style={[styles.btn, styles.btnDone]}>
-            <Text style={{ color: '#fff', fontWeight: '600' }}>Done</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Confirm birthday selection"
+            onPress={handleConfirm}
+            style={[styles.btn, { backgroundColor: colors.primary }]}
+          >
+            <Text style={{ color: colors.onPrimary, fontWeight: '600' }}>Done</Text>
           </Pressable>
         </View>
       </View>
@@ -166,17 +198,19 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={value ? `Change birthday, currently ${value}` : 'Select birthday'}
       onPress={handleOpen}
       style={{
-        borderColor: '#79747E',
+        borderColor: colors.outline,
         borderWidth: 1,
         borderRadius: 4,
         paddingVertical: 14,
         paddingHorizontal: 16,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface,
       }}
     >
-      <Text style={{ color: value ? '#1C1B1F' : '#9E9E9E', fontSize: 16 }}>
+      <Text style={{ color: value ? colors.onSurface : colors.onSurfaceVariant, fontSize: 16 }}>
         {value || 'Select birthday'}
       </Text>
     </Pressable>
@@ -189,11 +223,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pickerContainer: {
-    backgroundColor: '#FAFAFA',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   pickerRow: {
     flexDirection: 'row',
@@ -204,32 +236,20 @@ const styles = StyleSheet.create({
   },
   colLabel: {
     textAlign: 'center',
-    color: '#888',
     marginBottom: 8,
   },
   scrollCol: {
     maxHeight: 180,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D0D0D0',
-    backgroundColor: '#fff',
   },
   option: {
     paddingVertical: 8,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  optionSelected: {
-    backgroundColor: orbitTheme.colors.primary + '20',
   },
   optionText: {
     fontSize: 14,
-    color: '#333',
-  },
-  optionTextSelected: {
-    color: orbitTheme.colors.primary,
-    fontWeight: '700',
   },
   btn: {
     flex: 1,
@@ -238,9 +258,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   btnCancel: {
-    backgroundColor: '#E8E8E8',
-  },
-  btnDone: {
-    backgroundColor: orbitTheme.colors.primary,
+    borderWidth: 1,
   },
 });

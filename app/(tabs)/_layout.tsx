@@ -1,18 +1,25 @@
 import { useColorScheme } from 'react-native';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { useTheme } from 'react-native-paper';
+import { useTheme, Icon, Text } from 'react-native-paper';
 import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
+import { useUiStore } from '@/store/ui';
 
 export default function TabsLayout() {
   const { colors } = useTheme();
   const systemColorScheme = useColorScheme();
-  const isDark = colors.background === orbitDarkTheme.colors.background;
+  const themeMode = useUiStore((s) => s.themeMode);
+  const isDark =
+    themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
+
+  // Dark mode: surface-colored header; Light mode: branded purple header
+  const headerBg = isDark ? colors.surface : colors.primary;
+  const headerText = isDark ? colors.onSurface : colors.onPrimary;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      {/* Colored top strip */}
-      <View style={[styles.topStrip, { backgroundColor: colors.primary }]} />
+    <View style={[styles.container, { backgroundColor: headerBg }]}>
+      {/* Colored top strip — only in light mode */}
+      {!isDark && <View style={[styles.topStrip, { backgroundColor: colors.primary }]} />}
       <Tabs
         screenOptions={{
           headerTitleAlign: 'left',
@@ -20,9 +27,9 @@ export default function TabsLayout() {
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.onSurfaceVariant,
           tabBarLabelStyle: styles.tabLabel,
-          headerStyle: [styles.header, { backgroundColor: colors.primary }],
-          headerTitleStyle: [styles.headerTitle, { color: colors.onPrimary }],
-          headerTintColor: colors.onPrimary,
+          headerStyle: [styles.header, { backgroundColor: headerBg }],
+          headerTitleStyle: [styles.headerTitle, { color: headerText }],
+          headerTintColor: headerText,
         }}
       >
         <Tabs.Screen
@@ -31,6 +38,9 @@ export default function TabsLayout() {
             title: 'Home',
             tabBarLabel: 'Home',
             headerTitle: 'Orbit',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="home" size={size} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -39,6 +49,9 @@ export default function TabsLayout() {
             title: 'People',
             tabBarLabel: 'People',
             headerTitle: 'People',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="account-group" size={size} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -47,6 +60,9 @@ export default function TabsLayout() {
             title: 'Settings',
             tabBarLabel: 'Settings',
             headerTitle: 'Settings',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="cog" size={size} color={color} />
+            ),
           }}
         />
       </Tabs>

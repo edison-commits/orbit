@@ -66,6 +66,7 @@ export const contactsRepository = {
         location,
         phone,
         email,
+        social_json as socialJson,
         notes,
         tags_json as tagsJson,
         cadence,
@@ -82,6 +83,36 @@ export const contactsRepository = {
       ORDER BY is_paused ASC, CASE due_state WHEN 'overdue' THEN 0 WHEN 'due' THEN 1 ELSE 2 END, ${effectiveDueSql()} ASC, name COLLATE NOCASE ASC;`,
     );
   },
+  listAll(): Contact[] {
+    const db = getDb();
+    return db.getAllSync<Contact>(
+      `SELECT
+        id,
+        name,
+        nickname,
+        photo_uri as photoUri,
+        relationship_type as relationshipType,
+        how_we_met as howWeMet,
+        birthday,
+        location,
+        phone,
+        email,
+        social_json as socialJson,
+        notes,
+        tags_json as tagsJson,
+        cadence,
+        cadence_snoozed_until as cadenceSnoozedUntil,
+        is_paused as isPaused,
+        is_archived as isArchived,
+        last_interaction_at as lastInteractionAt,
+        next_due_at as nextDueAt,
+        due_state as dueState,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM contacts
+      ORDER BY created_at ASC, name COLLATE NOCASE ASC;`,
+    );
+  },
   listRemindable(): Contact[] {
     const db = getDb();
     return db.getAllSync<Contact>(
@@ -96,6 +127,7 @@ export const contactsRepository = {
         location,
         phone,
         email,
+        social_json as socialJson,
         notes,
         tags_json as tagsJson,
         cadence,
@@ -126,6 +158,7 @@ export const contactsRepository = {
           location,
           phone,
           email,
+          social_json as socialJson,
           notes,
           tags_json as tagsJson,
           cadence,

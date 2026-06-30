@@ -1,6 +1,6 @@
 import type { DUE_STATES, INTERACTION_TYPES } from '@/lib/constants';
 
-export type DueState = (typeof DUE_STATES)[number];
+export type DueState = (typeof DUE_STATES)[number] | 'birthday';
 export type InteractionType = (typeof INTERACTION_TYPES)[number];
 
 export interface Contact {

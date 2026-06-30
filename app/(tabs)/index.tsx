@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, View, StyleSheet, RefreshControl } from 'react-native';
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
-import { getHomeAggregates } from '@/features/home/homeService';
-import { contactsRepository } from '@/db/repositories/contactsRepository';
-import { formatDueLabel, getDueColor, getDaysUntilBirthday } from '@/lib/dates';
+import { getHomeAggregates, type BirthdayContactListItem } from '@/features/home/homeService';
+import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
+import { formatDueLabel, getDueColor } from '@/lib/dates';
 import { DUE_COLORS } from '@/lib/theme';
 
 const SECTION_LABELS: Record<string, string> = {
@@ -13,21 +13,45 @@ const SECTION_LABELS: Record<string, string> = {
   upcoming: 'Upcoming',
 };
 
+function hasBirthdayDays(contact: object): contact is BirthdayContactListItem {
+  return 'birthdayDays' in contact && typeof contact.birthdayDays === 'number';
+}
+
 export default function HomeScreen() {
   const { colors } = useTheme();
   const [aggregates, setAggregates] = useState(() => getHomeAggregates());
+  const [stats, setStats] = useState<ContactsSummaryCounts>(() => contactsRepository.getSummaryCounts());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const reload = useCallback(() => {
+    setAggregates(getHomeAggregates());
+    setStats(contactsRepository.getSummaryCounts());
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setAggregates(getHomeAggregates());
-    }, []),
+      reload();
+    }, [reload]),
   );
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    requestAnimationFrame(() => {
+      reload();
+      setRefreshing(false);
+    });
+  }, [reload]);
 
   const totalContactCount = aggregates.reduce((sum, a) => sum + a.count, 0);
 
   if (totalContactCount === 0) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, gap: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+        }
+      >
         <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
           Who needs you — now, today, and soon.
         </Text>
@@ -50,11 +74,15 @@ export default function HomeScreen() {
     );
   }
 
-  const stats = contactsRepository.getSummaryCounts();
   const totalContacts = (stats.overdue ?? 0) + (stats.due ?? 0) + (stats.upcoming ?? 0);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+      }
+    >
       <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
         Who needs you — now, today, and soon.
       </Text>
@@ -116,31 +144,57 @@ export default function HomeScreen() {
                 {aggregate.contacts.length > 0 && (
                   <View style={{ gap: 6, marginTop: 2 }}>
                     {aggregate.contacts.map((contact) => {
-                      const birthdayDays = isBirthday && 'birthdayDays' in contact
-                        ? (contact as any).birthdayDays
+                      const birthdayDays = isBirthday && hasBirthdayDays(contact)
+                        ? contact.birthdayDays
                         : null;
+                      const showQuickLog = contact.dueState === 'overdue' || contact.dueState === 'due';
                       return (
-                        <Link key={contact.id} href={`/contact/${contact.id}`} asChild>
-                          <View style={styles.contactRow}>
-                            {isBirthday ? (
-                              <Icon source="cake-variant" size={14} color={color} style={{ marginTop: 1 }} />
-                            ) : (
-                              <View style={[styles.miniDot, { backgroundColor: color }]} />
-                            )}
-                            <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
-                              {contact.name}
-                            </Text>
-                            {birthdayDays !== null ? (
-                              <Text variant="bodySmall" style={{ color: colors.outline }}>
-                                {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
+                        <View key={contact.id} style={styles.contactRowOuter}>
+                          <Link href={`/contact/${contact.id}`} asChild>
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`Open ${contact.name}'s contact details`}
+                              style={({ pressed }) => [
+                                styles.contactRow,
+                                pressed && { opacity: 0.6 },
+                              ]}
+                            >
+                              {isBirthday ? (
+                                <View style={{ marginTop: 1 }}><Icon source="cake-variant" size={14} color={color} /></View>
+                              ) : (
+                                <View style={[styles.miniDot, { backgroundColor: color }]} />
+                              )}
+                              <Text variant="bodyMedium" style={{ flex: 1 }} numberOfLines={1}>
+                                {contact.name}
                               </Text>
-                            ) : (
-                              <Text variant="bodySmall" style={{ color: colors.outline }}>
-                                {formatDueLabel(contact.nextDueAt)}
-                              </Text>
-                            )}
-                          </View>
-                        </Link>
+                              {birthdayDays !== null ? (
+                                <Text variant="bodySmall" style={{ color: colors.outline }}>
+                                  {birthdayDays === 0 ? 'today' : birthdayDays === 1 ? 'tomorrow' : `in ${birthdayDays}d`}
+                                </Text>
+                              ) : (
+                                <Text variant="bodySmall" style={{ color: colors.outline }}>
+                                  {formatDueLabel(contact.nextDueAt)}
+                                </Text>
+                              )}
+                            </Pressable>
+                          </Link>
+                          {showQuickLog && (
+                            <Link href={{ pathname: '/interaction/new', params: { contactId: contact.id } }} asChild>
+                              <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={`Log an interaction with ${contact.name}`}
+                                hitSlop={8}
+                                style={({ pressed }) => [
+                                  styles.quickLogBtn,
+                                  { backgroundColor: colors.primaryContainer },
+                                  pressed && { opacity: 0.6 },
+                                ]}
+                              >
+                                <Icon source="plus" size={14} color={colors.primary} />
+                              </Pressable>
+                            </Link>
+                          )}
+                        </View>
                       );
                     })}
                   </View>
@@ -184,10 +238,24 @@ const styles = StyleSheet.create({
   countChip: {
     borderRadius: 12,
   },
+  contactRowOuter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    paddingVertical: 2,
+  },
+  quickLogBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statCard: {
     flex: 1,

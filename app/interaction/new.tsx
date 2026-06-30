@@ -87,7 +87,11 @@ export default function NewInteractionScreen() {
         {selectedContacts.length > 0 ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {selectedContacts.map((contact) => (
-              <Chip key={contact.id} onClose={() => toggleContact(contact.id)}>
+              <Chip
+                key={contact.id}
+                onClose={() => toggleContact(contact.id)}
+                accessibilityLabel={`Remove ${contact.name} from this interaction`}
+              >
                 {contact.name}
               </Chip>
             ))}
@@ -95,6 +99,7 @@ export default function NewInteractionScreen() {
         ) : null}
         <Searchbar
           placeholder="Search people..."
+          accessibilityLabel="Search people to add to this interaction"
           value={contactSearch}
           onChangeText={setContactSearch}
           style={{ marginVertical: 4 }}
@@ -106,6 +111,8 @@ export default function NewInteractionScreen() {
               <Chip
                 key={contact.id}
                 selected={checked}
+                accessibilityState={{ selected: checked }}
+                accessibilityLabel={`${checked ? 'Deselect' : 'Select'} ${contact.name} for this interaction`}
                 onPress={() => toggleContact(contact.id)}
                 showSelectedCheck={checked}
               >
@@ -123,7 +130,13 @@ export default function NewInteractionScreen() {
         <Text variant="titleMedium">Type</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {INTERACTION_TYPES.map((type) => (
-            <Chip key={type} selected={interactionType === type} onPress={() => setInteractionType(type)}>
+            <Chip
+              key={type}
+              selected={interactionType === type}
+              accessibilityState={{ selected: interactionType === type }}
+              accessibilityLabel={`Set interaction type to ${type}`}
+              onPress={() => setInteractionType(type)}
+            >
               {type}
             </Chip>
           ))}
@@ -132,6 +145,7 @@ export default function NewInteractionScreen() {
 
       <TextInput
         label="Note"
+        accessibilityLabel="Interaction note"
         value={note}
         onChangeText={setNote}
         multiline
@@ -143,7 +157,12 @@ export default function NewInteractionScreen() {
         {error ?? ''}
       </HelperText>
 
-      <Button mode="contained" onPress={handleSave} disabled={isSaving}>
+      <Button
+        mode="contained"
+        onPress={handleSave}
+        disabled={isSaving}
+        accessibilityLabel={`Save interaction${selectedContactIds.length > 1 ? ` for ${selectedContactIds.length} people` : ''}`}
+      >
         Save interaction{selectedContactIds.length > 1 ? ` for ${selectedContactIds.length}` : ''}
       </Button>
     </ScrollView>
