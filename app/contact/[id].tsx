@@ -55,7 +55,7 @@ export default function ContactDetailScreen() {
   // Add header-right "Log interaction" button so it's always accessible without scrolling
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
+      headerRight: contact?.isArchived ? undefined : () => (
         <Link href={{ pathname: '/interaction/new', params: { contactId: id } }} asChild>
           <Pressable
             accessibilityRole="button"
@@ -68,7 +68,7 @@ export default function ContactDetailScreen() {
         </Link>
       ),
     });
-  }, [navigation, id, headerActionColor]);
+  }, [navigation, id, headerActionColor, contact?.isArchived]);
 
   useFocusEffect(
     useCallback(() => {
