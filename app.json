@@ -16,6 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.orbit.app",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Orbit uses the camera to take profile photos of your contacts.",
         "NSPhotoLibraryUsageDescription": "Orbit accesses your photo library to add profile photos of your contacts.",
         "NSUserNotificationsUsageDescription": "Orbit sends reminders when it's time to check in with someone."
