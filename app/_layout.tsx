@@ -78,7 +78,7 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={activeTheme}>
       <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
+        barStyle="light-content"
         backgroundColor={headerBg}
       />
       <Stack

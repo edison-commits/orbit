@@ -11,6 +11,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { interactionsRepository } from '@/db/repositories/interactionsRepository';
 import { feedbackRepository } from '@/db/repositories/feedbackRepository';
+import type { Contact, Interaction, InteractionContact } from '@/types/models';
 
 const SUPABASE_URL = 'https://jkdgdcfpgxjfdlccvqjf.supabase.co';
 const SERVICE_KEY_REF = 'orbit_supabase_service_key';
@@ -65,8 +66,9 @@ export async function testConnection(): Promise<{ ok: boolean; error?: string }>
 export interface OrbitBackup {
   version: number;
   exported_at: string;
-  contacts: ReturnType<typeof contactsRepository.listByUrgency>;
-  interactions: ReturnType<typeof interactionsRepository.listRecent>;
+  contacts: Contact[];
+  interactions: Interaction[];
+  interactionContacts: InteractionContact[];
   feedback: ReturnType<typeof feedbackRepository.getAll>;
   meta: { defaultCadence: number }[];
 }
@@ -85,8 +87,9 @@ export async function createBackup(): Promise<string> {
   const backup: OrbitBackup = {
     version: 1,
     exported_at: new Date().toISOString(),
-    contacts: contactsRepository.listByUrgency(),
-    interactions: interactionsRepository.listRecent(9999),
+    contacts: contactsRepository.listAll(),
+    interactions: interactionsRepository.listAll(),
+    interactionContacts: interactionsRepository.listContactLinks(),
     feedback: feedbackRepository.getAll(),
     meta: [{ defaultCadence: parseInt(defaultCadence.value, 10) }],
   };
@@ -145,9 +148,9 @@ export async function restoreBackup(filename: string): Promise<void> {
 
     for (const c of backup.contacts) {
       db.runSync(
-        `INSERT INTO contacts (id,name,nickname,photo_uri,relationship_type,how_we_met,birthday,location,phone,email,notes,tags_json,cadence,cadence_snoozed_until,is_paused,is_archived,last_interaction_at,next_due_at,due_state,created_at,updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`,
-        [c.id, c.name, c.nickname, c.photoUri, c.relationshipType, c.howWeMet, c.birthday, c.location, c.phone, c.email, c.notes, c.tagsJson, c.cadence, c.cadenceSnoozedUntil ?? null, c.isPaused ?? 0, c.isArchived ?? 0, c.lastInteractionAt ?? null, c.nextDueAt ?? null, c.dueState, c.createdAt, c.updatedAt],
+        `INSERT INTO contacts (id,name,nickname,photo_uri,relationship_type,how_we_met,birthday,location,phone,email,social_json,notes,tags_json,cadence,cadence_snoozed_until,is_paused,is_archived,last_interaction_at,next_due_at,due_state,created_at,updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`,
+        [c.id, c.name, c.nickname, c.photoUri, c.relationshipType, c.howWeMet, c.birthday, c.location, c.phone, c.email, c.socialJson ?? null, c.notes, c.tagsJson, c.cadence, c.cadenceSnoozedUntil ?? null, c.isPaused ?? 0, c.isArchived ?? 0, c.lastInteractionAt ?? null, c.nextDueAt ?? null, c.dueState, c.createdAt, c.updatedAt],
       );
     }
 
@@ -155,6 +158,13 @@ export async function restoreBackup(filename: string): Promise<void> {
       db.runSync(
         `INSERT INTO interactions (id,occurred_at,type,note,created_at) VALUES (?,?,?,?,?);`,
         [i.id, i.occurredAt, i.type ?? null, i.note ?? null, i.createdAt],
+      );
+    }
+
+    for (const link of backup.interactionContacts ?? []) {
+      db.runSync(
+        `INSERT INTO interaction_contacts (interaction_id, contact_id) VALUES (?, ?);`,
+        [link.interactionId, link.contactId],
       );
     }
 

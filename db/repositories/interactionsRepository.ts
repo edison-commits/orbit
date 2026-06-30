@@ -1,5 +1,5 @@
 import { getDb } from '@/db/client';
-import type { Interaction, InteractionParticipant, InteractionTimelineItem } from '@/types/models';
+import type { Interaction, InteractionContact, InteractionParticipant, InteractionTimelineItem } from '@/types/models';
 
 export interface CreateInteractionRecord {
   id: string;
@@ -19,6 +19,22 @@ export const interactionsRepository = {
        ORDER BY occurred_at DESC
       LIMIT ?;`,
       [limit],
+    );
+  },
+  listAll(): Interaction[] {
+    const db = getDb();
+    return db.getAllSync<Interaction>(
+      `SELECT id, occurred_at as occurredAt, type, note, created_at as createdAt
+       FROM interactions
+       ORDER BY occurred_at ASC, created_at ASC;`,
+    );
+  },
+  listContactLinks(): InteractionContact[] {
+    const db = getDb();
+    return db.getAllSync<InteractionContact>(
+      `SELECT interaction_id as interactionId, contact_id as contactId
+       FROM interaction_contacts
+       ORDER BY interaction_id ASC, contact_id ASC;`,
     );
   },
   listForContact(contactId: string, limit = 12): InteractionTimelineItem[] {

@@ -40,7 +40,8 @@ function getDueIcon(dueState: string): string {
 }
 
 export default function ContactDetailScreen() {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
+  const headerActionColor = dark ? colors.onSurface : colors.onPrimary;
   const { id } = useLocalSearchParams<{ id: string }>();
   const [contact, setContact] = useState(() => contactsRepository.getById(id));
   const [recentInteractions, setRecentInteractions] = useState<InteractionTimelineItem[]>(() =>
@@ -62,12 +63,12 @@ export default function ContactDetailScreen() {
             hitSlop={12}
             style={({ pressed }) => [{ marginRight: 8, padding: 4 }, pressed && { opacity: 0.6 }]}
           >
-            <Icon source="plus-circle" size={26} color={colors.onPrimary} />
+            <Icon source="plus-circle" size={26} color={headerActionColor} />
           </Pressable>
         </Link>
       ),
     });
-  }, [navigation, id, colors.onPrimary]);
+  }, [navigation, id, headerActionColor]);
 
   useFocusEffect(
     useCallback(() => {
