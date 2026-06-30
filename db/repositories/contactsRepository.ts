@@ -105,7 +105,7 @@ export const contactsRepository = {
         is_paused as isPaused,
         is_archived as isArchived,
         last_interaction_at as lastInteractionAt,
-        ${effectiveDueSql()} as nextDueAt,
+        next_due_at as nextDueAt,
         due_state as dueState,
         created_at as createdAt,
         updated_at as updatedAt
