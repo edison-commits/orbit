@@ -22,6 +22,7 @@ export interface CreateContactRecord {
   phone?: string | null;
   email?: string | null;
   socialJson?: string | null;
+  tagsJson?: string | null;
   cadence: number;
   lastInteractionAt?: string | null;
   createdAt: string;
@@ -39,6 +40,7 @@ export interface UpdateContactRecord {
   phone?: string | null;
   email?: string | null;
   socialJson?: string | null;
+  tagsJson?: string | null;
   cadence: number;
   updatedAt: string;
 }
@@ -192,13 +194,14 @@ export const contactsRepository = {
         phone,
         email,
         social_json,
+        tags_json,
         cadence,
         last_interaction_at,
         next_due_at,
         due_state,
         created_at,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         input.id,
         input.name,
@@ -210,6 +213,7 @@ export const contactsRepository = {
         input.phone ?? null,
         input.email ?? null,
         input.socialJson ?? null,
+        input.tagsJson ?? null,
         input.cadence,
         input.lastInteractionAt ?? null,
         nextDueAt,
@@ -263,6 +267,7 @@ export const contactsRepository = {
            phone = ?,
            email = ?,
            social_json = ?,
+           tags_json = ?,
            cadence = ?,
            next_due_at = ?,
            due_state = ?,
@@ -278,6 +283,7 @@ export const contactsRepository = {
         input.phone ?? null,
         input.email ?? null,
         input.socialJson ?? null,
+        input.tagsJson ?? null,
         input.cadence,
         nextDueAt,
         dueState,

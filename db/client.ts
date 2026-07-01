@@ -46,4 +46,21 @@ export async function runMigrations() {
       );
     });
   }
+
+  const m5Existing = db.getFirstSync<{ version: number }>(
+    'SELECT version FROM schema_migrations WHERE version = 5;',
+  );
+  if (!m5Existing) {
+    const tagsColumn = db.getFirstSync<{ name: string }>(
+      "SELECT name FROM pragma_table_info('contacts') WHERE name = 'tags_json' LIMIT 1;",
+    );
+    db.withTransactionSync(() => {
+      if (!tagsColumn) {
+        db.execSync('ALTER TABLE contacts ADD COLUMN tags_json TEXT;');
+      }
+      db.runSync(
+        "INSERT INTO schema_migrations (version, name, applied_at) VALUES (5, '005_contact_tags', datetime('now'));",
+      );
+    });
+  }
 }

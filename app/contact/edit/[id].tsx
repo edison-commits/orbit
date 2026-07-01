@@ -7,6 +7,7 @@ import { updateContact } from '@/features/contacts/contactService';
 import { RELATIONSHIP_TYPES } from '@/lib/constants';
 import { normalizeSocialHandle } from '@/lib/social';
 import { orbitTheme } from '@/lib/theme';
+import { tagsToInput, tagsToJson } from '@/lib/tags';
 import type { Contact } from '@/types/models';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 
@@ -29,6 +30,7 @@ export default function EditContactScreen() {
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
+  const [tags, setTags] = useState('');
   const [relationshipType, setRelationshipType] = useState('friend');
   const [cadence, setCadence] = useState<number>(30);
   const [notes, setNotes] = useState('');
@@ -52,6 +54,7 @@ export default function EditContactScreen() {
     setPhone(contact.phone ?? '');
     setEmail(contact.email ?? '');
     setBirthday(contact.birthday ?? '');
+    setTags(tagsToInput(contact.tagsJson));
     try {
       const social: SocialData = contact.socialJson ? JSON.parse(contact.socialJson) : {};
       setInstagram(social.instagram ?? '');
@@ -107,6 +110,7 @@ export default function EditContactScreen() {
         phone: phone.trim() || null,
         email: email.trim() || null,
         socialJson: Object.keys(social).length > 0 ? JSON.stringify(social) : null,
+        tagsJson: tagsToJson(tags),
       });
       router.replace(`/contact/${contact.id}`);
     } catch (err) {
@@ -230,6 +234,18 @@ export default function EditContactScreen() {
           left={<TextInput.Icon icon="linkedin" />}
         />
       </View>
+
+      <Divider />
+
+      <Text variant="titleMedium">Tags</Text>
+      <TextInput
+        label="Tags"
+        value={tags}
+        onChangeText={setTags}
+        autoCapitalize="none"
+        placeholder="work, family, gym"
+      />
+      <HelperText type="info">Separate tags with commas.</HelperText>
 
       <Divider />
 

@@ -30,7 +30,7 @@ export function buildContactDraft(input: Partial<Contact>) {
 }
 
 export async function createContact(
-  input: Pick<Contact, 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null },
+  input: Pick<Contact, 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson' | 'tagsJson'> & { socialJson?: string | null; tagsJson?: string | null },
   options: { syncReminders?: boolean; importedSourceId?: string } = {},
 ) {
   const draft = buildContactDraft({
@@ -55,6 +55,7 @@ export async function createContact(
       phone: input.phone ?? null,
       email: input.email ?? null,
       socialJson: input.socialJson ?? null,
+      tagsJson: input.tagsJson ?? null,
       cadence: draft.cadence,
       createdAt: now,
       updatedAt: now,
@@ -77,7 +78,7 @@ export async function createContact(
   return contact;
 }
 
-export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null }) {
+export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson' | 'tagsJson'> & { socialJson?: string | null; tagsJson?: string | null }) {
   const draft = buildContactDraft({
     id: input.id,
     name: input.name,
@@ -98,6 +99,7 @@ export async function updateContact(input: Pick<Contact, 'id' | 'name' | 'nickna
     phone: input.phone ?? null,
     email: input.email ?? null,
     socialJson: input.socialJson ?? null,
+    tagsJson: input.tagsJson ?? null,
     cadence: draft.cadence,
     updatedAt: toIsoNow(),
   });
