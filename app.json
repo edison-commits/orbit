@@ -19,11 +19,13 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Orbit uses the camera to take profile photos of your contacts.",
         "NSPhotoLibraryUsageDescription": "Orbit accesses your photo library to add profile photos of your contacts.",
+        "NSContactsUsageDescription": "Orbit reads your device contacts so you can choose which people to save to your relationship tracker.",
         "NSUserNotificationsUsageDescription": "Orbit sends reminders when it's time to check in with someone."
       }
     },
     "android": {
       "package": "com.orbit.app",
+      "blockedPermissions": ["android.permission.WRITE_CONTACTS"],
       "adaptiveIcon": {
         "backgroundColor": "#7C5CFC",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -47,6 +49,12 @@
           "photosPermission": "Orbit accesses your photo library to add profile photos of your contacts.",
           "cameraPermission": "Orbit uses the camera to take profile photos of your contacts.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Orbit reads your device contacts so you can choose which people to save to your relationship tracker."
         }
       ],
       "expo-secure-store"

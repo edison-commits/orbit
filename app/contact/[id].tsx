@@ -283,7 +283,9 @@ export default function ContactDetailScreen() {
       {(() => {
         try {
           const social = contact.socialJson ? (JSON.parse(contact.socialJson) as Record<string, string>) : {};
-          const entries = Object.entries(social).filter(([, v]) => v);
+          const entries = Object.entries(social).filter(([platform, v]) =>
+            Boolean(v) && (platform === 'instagram' || platform === 'twitter' || platform === 'linkedin'),
+          );
           if (entries.length === 0) return null;
 
           const openSocial = (platform: string, handle: string) => {

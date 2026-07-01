@@ -1,11 +1,12 @@
 import * as SQLite from 'expo-sqlite';
 import { initialMigration } from '@/db/migrations/001_initial';
 import { migration003 } from '@/db/migrations/003_feedback';
+import { migration004 } from '@/db/migrations/004_imported_contact_sources';
 
 const DB_NAME = 'orbit.db';
 const db = SQLite.openDatabaseSync(DB_NAME);
 
-export const MIGRATIONS = [initialMigration, migration003];
+export const MIGRATIONS = [initialMigration, migration003, migration004];
 
 export function getDb() {
   return db;

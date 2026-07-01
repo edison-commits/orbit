@@ -50,6 +50,7 @@ export const settingsService = {
     const db = getDb();
     db.runSync(`DELETE FROM interaction_contacts;`);
     db.runSync(`DELETE FROM interactions;`);
+    db.runSync(`DELETE FROM imported_contact_sources;`);
     db.runSync(`DELETE FROM contacts;`);
     db.runSync(`DELETE FROM app_meta;`);
   },

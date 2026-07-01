@@ -105,6 +105,20 @@ function parseBirthday(value: string | null | undefined, referenceDate = new Dat
     return { date: new Date(referenceDate.getFullYear(), monthIndex, day), hasYear: false, monthIndex, day };
   }
 
+  const displayMatch = value.match(/^([A-Za-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?$/);
+  if (displayMatch) {
+    const [, monthName, dayValue, yearValue] = displayMatch;
+    const monthIndex = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december',
+    ].findIndex((month) => month.startsWith(monthName.toLowerCase()));
+    const day = Number(dayValue);
+    const year = yearValue ? Number(yearValue) : 2000;
+    if (monthIndex >= 0 && isValidMonthDay(year, monthIndex, day)) {
+      return { date: new Date(yearValue ? year : referenceDate.getFullYear(), monthIndex, day), hasYear: Boolean(yearValue), monthIndex, day };
+    }
+  }
+
   return null;
 }
 

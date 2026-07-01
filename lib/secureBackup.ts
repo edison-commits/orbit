@@ -70,6 +70,7 @@ export interface OrbitBackup {
   contacts: Contact[];
   interactions: Interaction[];
   interactionContacts?: InteractionContact[];
+  importedContactSources?: { sourceId: string; contactId: string; createdAt: string }[];
   feedback: ReturnType<typeof feedbackRepository.getAll>;
   meta: { defaultCadence: number }[];
 }
@@ -107,6 +108,16 @@ function readFlag(record: BackupRecord, camelKey: string, snakeKey: string): num
   return value === true || value === 1 || value === '1' ? 1 : 0;
 }
 
+function listImportedContactSources() {
+  const { getDb } = require('@/db/client') as { getDb: () => {
+    getAllSync<T>(sql: string): T[];
+  } };
+  return getDb().getAllSync<{ sourceId: string; contactId: string; createdAt: string }>(
+    `SELECT source_id AS sourceId, contact_id AS contactId, created_at AS createdAt
+     FROM imported_contact_sources;`,
+  );
+}
+
 export async function createBackup(): Promise<string> {
   const key = await getServiceKey();
   if (!key) throw new Error('Service key not configured. Please add it in Settings → Cloud Backup.');
@@ -119,6 +130,7 @@ export async function createBackup(): Promise<string> {
     contacts: contactsRepository.listAll(),
     interactions: interactionsRepository.listAll(),
     interactionContacts: interactionsRepository.listContactLinks(),
+    importedContactSources: listImportedContactSources(),
     feedback: feedbackRepository.getAll(),
     meta: [{ defaultCadence: settingsService.getDefaultCadence() }],
   };
@@ -173,6 +185,7 @@ export async function restoreBackup(filename: string): Promise<void> {
   db.withTransactionSync(() => {
     db.execSync('DELETE FROM interaction_contacts;');
     db.execSync('DELETE FROM interactions;');
+    db.execSync('DELETE FROM imported_contact_sources;');
     db.execSync('DELETE FROM contacts;');
     db.execSync('DELETE FROM app_meta;');
 
@@ -227,6 +240,18 @@ export async function restoreBackup(filename: string): Promise<void> {
       db.runSync(
         `INSERT INTO interaction_contacts (interaction_id, contact_id) VALUES (?, ?);`,
         [readRequiredString(record, 'interactionId', 'interaction_id'), readRequiredString(record, 'contactId', 'contact_id')],
+      );
+    }
+
+    for (const source of backup.importedContactSources ?? []) {
+      const record = asRecord(source);
+      db.runSync(
+        `INSERT OR IGNORE INTO imported_contact_sources (source_id, contact_id, created_at) VALUES (?, ?, ?);`,
+        [
+          readRequiredString(record, 'sourceId', 'source_id'),
+          readRequiredString(record, 'contactId', 'contact_id'),
+          readRequiredString(record, 'createdAt', 'created_at'),
+        ],
       );
     }
 

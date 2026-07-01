@@ -1,3 +1,4 @@
+import { getDb } from '@/db/client';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { reminderService } from '@/features/reminders/reminderService';
 import { DEFAULT_CADENCE_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
@@ -28,7 +29,10 @@ export function buildContactDraft(input: Partial<Contact>) {
   });
 }
 
-export async function createContact(input: Pick<Contact, 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null }) {
+export async function createContact(
+  input: Pick<Contact, 'name' | 'nickname' | 'photoUri' | 'relationshipType' | 'cadence' | 'notes' | 'birthday' | 'phone' | 'email' | 'socialJson'> & { socialJson?: string | null },
+  options: { syncReminders?: boolean; importedSourceId?: string } = {},
+) {
   const draft = buildContactDraft({
     name: input.name,
     nickname: input.nickname,
@@ -38,23 +42,38 @@ export async function createContact(input: Pick<Contact, 'name' | 'nickname' | '
   });
   const now = toIsoNow();
 
-  const contact = contactsRepository.create({
-    id: createId('contact'),
-    name: draft.name,
-    nickname: draft.nickname,
-    photoUri: input.photoUri ?? null,
-    relationshipType: draft.relationshipType,
-    notes: draft.notes,
-    birthday: input.birthday ?? null,
-    phone: input.phone ?? null,
-    email: input.email ?? null,
-    socialJson: input.socialJson ?? null,
-    cadence: draft.cadence,
-    createdAt: now,
-    updatedAt: now,
+  let contact: Contact | undefined;
+  getDb().withTransactionSync(() => {
+    const created = contactsRepository.create({
+      id: createId('contact'),
+      name: draft.name,
+      nickname: draft.nickname,
+      photoUri: input.photoUri ?? null,
+      relationshipType: draft.relationshipType,
+      notes: draft.notes,
+      birthday: input.birthday ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      socialJson: input.socialJson ?? null,
+      cadence: draft.cadence,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (options.importedSourceId) {
+      getDb().runSync(
+        `INSERT INTO imported_contact_sources (source_id, contact_id, created_at)
+         VALUES (?, ?, datetime('now'));`,
+        [options.importedSourceId, created.id],
+      );
+    }
+    contact = created;
   });
 
-  await reminderService.syncNotifications();
+  if (options.syncReminders ?? true) {
+    await reminderService.syncNotifications();
+  }
+  if (!contact) throw new Error('Contact was not created.');
   return contact;
 }
 
