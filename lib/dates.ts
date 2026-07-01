@@ -142,8 +142,8 @@ export function formatBirthday(value: string | null | undefined): string {
 }
 
 /** Returns days until the next occurrence of a birthday, or null if unparseable. */
-export function getDaysUntilBirthday(value: string | null | undefined): number | null {
-  const today = new Date();
+export function getDaysUntilBirthday(value: string | null | undefined, now = new Date()): number | null {
+  const today = now;
   const parsed = parseBirthday(value, today);
   if (!parsed) return null;
 

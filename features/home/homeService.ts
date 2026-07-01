@@ -1,5 +1,6 @@
 import { contactsRepository, type ContactsListItem } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, getDaysUntilBirthday } from '@/lib/dates';
+import { getEffectiveDueAt } from '@/lib/reminders';
 import type { DueState } from '@/types/models';
 
 type StandardHomeDueState = Exclude<DueState, 'birthday'>;
@@ -39,7 +40,7 @@ function buildSummary(dueState: StandardHomeDueState, count: number, contacts: C
   const preview = [first?.name, second?.name, third?.name].filter(Boolean).join(', ');
 
   if (count === 1 && first) {
-    return `${first.name} is ${formatDueLabel(first.nextDueAt).toLowerCase()}.`;
+    return `${first.name} is ${formatDueLabel(getEffectiveDueAt(first.nextDueAt, first.cadenceSnoozedUntil)).toLowerCase()}.`;
   }
 
   if (count <= 3) {

@@ -5,6 +5,7 @@ import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates, type BirthdayContactListItem } from '@/features/home/homeService';
 import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, getDueColor } from '@/lib/dates';
+import { getEffectiveDueAt } from '@/lib/reminders';
 import { DUE_COLORS } from '@/lib/theme';
 
 const SECTION_LABELS: Record<string, string> = {
@@ -173,7 +174,7 @@ export default function HomeScreen() {
                                 </Text>
                               ) : (
                                 <Text variant="bodySmall" style={{ color: colors.outline }}>
-                                  {formatDueLabel(contact.nextDueAt)}
+                                  {formatDueLabel(getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil))}
                                 </Text>
                               )}
                             </Pressable>
