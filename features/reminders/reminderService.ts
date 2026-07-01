@@ -1,15 +1,24 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
+import { settingsService } from '@/features/settings/settingsService';
 import { getReminderTriggerAt } from '@/lib/reminders';
 
 const ORBIT_REMINDER_KIND = 'orbit-due-contact';
 
-async function ensurePermissions() {
+export interface ReminderSyncResult {
+  scheduled: number;
+  permissionGranted: boolean;
+  notificationsEnabled: boolean;
+}
+
+async function ensurePermissions(requestPermissions: boolean) {
   const current = await Notifications.getPermissionsAsync();
   if (current.granted || current.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
     return true;
   }
+
+  if (!requestPermissions) return false;
 
   const requested = await Notifications.requestPermissionsAsync();
   return requested.granted || requested.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL;
@@ -47,13 +56,29 @@ export const reminderService = {
       }),
     });
   },
-  async syncNotifications() {
+  async syncNotifications(options: { requestPermissions?: boolean } = {}): Promise<ReminderSyncResult> {
     contactsRepository.clearExpiredSnoozes();
 
-    const allowed = await ensurePermissions();
+    const notificationPreference = settingsService.getNotificationsPreference();
+    let notificationsEnabled = notificationPreference === true;
+
+    if (notificationPreference === null) {
+      const legacyAllowed = await ensurePermissions(false);
+      if (legacyAllowed) {
+        settingsService.setNotificationsEnabled(true);
+        notificationsEnabled = true;
+      }
+    }
+
+    if (!notificationsEnabled) {
+      await cancelOrbitNotifications();
+      return { scheduled: 0, permissionGranted: false, notificationsEnabled: false };
+    }
+
+    const allowed = await ensurePermissions(options.requestPermissions ?? false);
     if (!allowed) {
       await cancelOrbitNotifications();
-      return { scheduled: 0, permissionGranted: false };
+      return { scheduled: 0, permissionGranted: false, notificationsEnabled: true };
     }
 
     await ensureChannel();
@@ -84,6 +109,32 @@ export const reminderService = {
       scheduled += 1;
     }
 
-    return { scheduled, permissionGranted: true };
+    return { scheduled, permissionGranted: true, notificationsEnabled: true };
+  },
+  async setNotificationsEnabled(enabled: boolean): Promise<ReminderSyncResult> {
+    if (!enabled) {
+      settingsService.setNotificationsEnabled(false);
+      await cancelOrbitNotifications();
+      return { scheduled: 0, permissionGranted: false, notificationsEnabled: false };
+    }
+
+    settingsService.setNotificationsEnabled(true);
+
+    let result: ReminderSyncResult;
+    try {
+      result = await this.syncNotifications({ requestPermissions: true });
+    } catch (error) {
+      settingsService.setNotificationsEnabled(false);
+      await cancelOrbitNotifications();
+      throw error;
+    }
+
+    if (!result.permissionGranted) {
+      settingsService.setNotificationsEnabled(false);
+      await cancelOrbitNotifications();
+      return { scheduled: 0, permissionGranted: false, notificationsEnabled: false };
+    }
+
+    return result;
   },
 };
