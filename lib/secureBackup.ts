@@ -56,8 +56,10 @@ export async function testConnection(): Promise<{ ok: boolean; error?: string }>
 
   try {
     const supabase = getClient(key);
-    const { error } = await supabase.storage.listBuckets();
-    if (error) return { ok: false, error: error.message };
+    const { error } = await supabase.storage
+      .from('orbit-backups')
+      .list('', { limit: 1 });
+    if (error) return { ok: false, error: `Cannot access orbit-backups: ${error.message}` };
     return { ok: true };
   } catch (e: unknown) {
     return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
@@ -154,10 +156,12 @@ export async function listBackups(): Promise<{ name: string; created_at: string 
   const supabase = getClient(key);
   const { data, error } = await supabase.storage
     .from('orbit-backups')
-    .list('orbit_backup_', { sortBy: { column: 'created_at', order: 'desc' } });
+    .list('', { sortBy: { column: 'created_at', order: 'desc' } });
 
   if (error) throw new Error(`List failed: ${error.message}`);
-  return (data ?? []).map((f) => ({ name: f.name, created_at: f.created_at ?? '' }));
+  return (data ?? [])
+    .filter((f) => f.name.startsWith('orbit_backup_') && f.name.endsWith('.json'))
+    .map((f) => ({ name: f.name, created_at: f.created_at ?? '' }));
 }
 
 export async function restoreBackup(filename: string): Promise<void> {
@@ -186,6 +190,7 @@ export async function restoreBackup(filename: string): Promise<void> {
     db.execSync('DELETE FROM interaction_contacts;');
     db.execSync('DELETE FROM interactions;');
     db.execSync('DELETE FROM imported_contact_sources;');
+    db.execSync('DELETE FROM feedback;');
     db.execSync('DELETE FROM contacts;');
     db.execSync('DELETE FROM app_meta;');
 
@@ -255,7 +260,7 @@ export async function restoreBackup(filename: string): Promise<void> {
       );
     }
 
-    for (const f of backup.feedback) {
+    for (const f of backup.feedback ?? []) {
       db.runSync(
         `INSERT INTO feedback (id,type,message,created_at) VALUES (?,?,?,?);`,
         [f.id, f.type, f.message, f.created_at],

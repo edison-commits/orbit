@@ -60,7 +60,10 @@ export default function SettingsScreen() {
   const [backupConfigured, setBackupConfigured] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isSavingKey, setIsSavingKey] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'ok' | 'error'>('idle');
+  const backupConnectionReady = connectionStatus === 'ok';
+  const backupActionInFlight = isBackingUp || isRestoring || isTestingConnection;
 
   // Feedback state
   const [feedbackType, setFeedbackType] = useState<FeedbackType>('feature');
@@ -205,7 +208,7 @@ export default function SettingsScreen() {
   async function handleRestore(filename: string) {
     Alert.alert(
       'Restore backup?',
-      'This will replace all current data — contacts, interactions, and feedback. This cannot be undone.',
+      'This will replace local contacts, interactions, imported-contact markers, feedback, and the default check-in cadence. This cannot be undone unless you made a fresh backup first.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -269,13 +272,18 @@ export default function SettingsScreen() {
   }
 
   async function handleTestConnection() {
+    setIsTestingConnection(true);
     setConnectionStatus('idle');
-    const result = await testConnection();
-    setConnectionStatus(result.ok ? 'ok' : 'error');
-    if (result.ok) {
-      Alert.alert('Connected', 'Successfully connected to Supabase.');
-    } else {
-      Alert.alert('Connection failed', result.error ?? 'Could not connect.');
+    try {
+      const result = await testConnection();
+      setConnectionStatus(result.ok ? 'ok' : 'error');
+      if (result.ok) {
+        Alert.alert('Connected', 'Successfully verified access to the orbit-backups bucket.');
+      } else {
+        Alert.alert('Connection failed', result.error ?? 'Could not connect.');
+      }
+    } finally {
+      setIsTestingConnection(false);
     }
   }
 
@@ -516,46 +524,33 @@ export default function SettingsScreen() {
       {/* Cloud Backup */}
       <Card>
         <Card.Content style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant="titleMedium">☁️ Cloud Backup</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: themeColors.primaryContainer, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-              <Text variant="labelSmall" style={{ color: themeColors.onPrimaryContainer, fontWeight: '700', letterSpacing: 0.5 }}>PRO</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text variant="titleMedium">☁️ Cloud Backup</Text>
+              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: 2 }}>
+                Back up contacts, tags, interaction history, feedback, and import markers to Orbit’s configured Supabase bucket.
+              </Text>
             </View>
+            <Chip compact icon={backupConfigured ? (connectionStatus === 'ok' ? 'cloud-check' : 'cloud-alert') : 'cloud-off-outline'}>
+              {backupConfigured ? (connectionStatus === 'ok' ? 'connected' : 'needs check') : 'off'}
+            </Chip>
+          </View>
+
+          <View style={{ backgroundColor: themeColors.surfaceVariant, borderRadius: 12, padding: 12, gap: 4 }}>
+            <Text variant="labelMedium">Restore safety</Text>
+            <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+              Restoring replaces the local database, then re-syncs this device’s reminder schedule. Notification consent stays device-local and is not imported from backups.
+            </Text>
           </View>
 
           {!backupConfigured ? (
             <>
-              {/* Pro upsell banner */}
-              <View style={{ backgroundColor: themeColors.primaryContainer, borderRadius: 12, padding: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text variant="bodyMedium" style={{ fontWeight: '600', color: themeColors.onPrimaryContainer, flex: 1 }}>
-                    Try Pro free for 30 days
-                  </Text>
-                  <Button
-                    mode="contained"
-                    compact
-                    accessibilityLabel="Learn more about Orbit Pro"
-                    onPress={() =>
-                      Alert.alert(
-                        'Orbit Pro',
-                        'Cloud backup, multi-device sync, and priority support.\n\nFree for 30 days, then $4/month or $30/year.\n\nGet started by entering your Supabase service role key below.',
-                        [{ text: 'Got it' }],
-                      )
-                    }
-                    style={{ backgroundColor: themeColors.primary }}
-                    labelStyle={{ fontSize: 12 }}
-                  >
-                    Learn more
-                  </Button>
-                </View>
-              </View>
-
-              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: 4 }}>
-                Enter your Supabase service role key to activate Pro. Your key is stored securely on this device only.
+              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+                Paste the Supabase service role key for Orbit’s configured backup project. Orbit stores the key in SecureStore on this device only.
               </Text>
               <TextInput
                 mode="outlined"
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                placeholder="eyJhbG...VCJ9..."
                 value={apiKeyInput}
                 onChangeText={setApiKeyInput}
                 autoCapitalize="none"
@@ -568,24 +563,25 @@ export default function SettingsScreen() {
                 onPress={handleSaveApiKey}
                 loading={isSavingKey}
                 disabled={isSavingKey || !apiKeyInput.trim()}
-                accessibilityLabel="Start Orbit Pro trial with Supabase key"
+                accessibilityLabel="Save Supabase service role key for cloud backup"
               >
-                Start 30-day free trial
+                Save service role key
               </Button>
               <Text variant="labelSmall" style={{ color: themeColors.outline }}>
-                Stored locally on this device only — never sent to any server except Supabase.
+                Service role keys can grant broad access in the Supabase project. Use a dedicated backup project when possible, and never share this key.
               </Text>
             </>
           ) : (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text variant="labelMedium" style={{ color: themeColors.primary, fontWeight: '600' }}>✅ Pro active</Text>
-                <Text variant="bodySmall" style={{ color: themeColors.outline }}>· 30 days free</Text>
+                <Text variant="labelMedium" style={{ color: connectionStatus === 'ok' ? themeColors.primary : themeColors.error, fontWeight: '600' }}>
+                  {connectionStatus === 'ok' ? 'Backup connection verified' : 'Backup connection needs attention'}
+                </Text>
                 <View style={{ flex: 1 }} />
-                <Button mode="text" compact onPress={handleTestConnection} accessibilityLabel="Test cloud backup connection">
-                  Test
+                <Button mode="text" compact onPress={handleTestConnection} loading={isTestingConnection} disabled={backupActionInFlight} accessibilityLabel="Test cloud backup connection">
+                  {isTestingConnection ? 'Testing…' : 'Test'}
                 </Button>
-                <Button mode="text" compact textColor={themeColors.error} onPress={handleClearApiKey} accessibilityLabel="Remove cloud backup API key">
+                <Button mode="text" compact textColor={themeColors.error} onPress={handleClearApiKey} disabled={backupActionInFlight} accessibilityLabel="Remove cloud backup API key">
                   Remove
                 </Button>
               </View>
@@ -595,7 +591,7 @@ export default function SettingsScreen() {
                   mode="contained"
                   onPress={handleBackup}
                   loading={isBackingUp}
-                  disabled={isBackingUp}
+                  disabled={backupActionInFlight || !backupConnectionReady}
                   style={{ flex: 1 }}
                   icon="cloud-upload"
                   accessibilityLabel="Back up Orbit data now"
@@ -605,17 +601,21 @@ export default function SettingsScreen() {
                 <Button
                   mode="outlined"
                   onPress={handleShowBackups}
+                  disabled={backupActionInFlight || !backupConnectionReady}
                   accessibilityLabel={showBackupList ? 'Hide cloud backup list' : 'Show cloud backups to restore'}
                 >
-                  {showBackupList ? 'Hide' : 'Restore'}
+                  {showBackupList ? 'Hide restores' : 'Choose restore'}
                 </Button>
               </View>
 
               {showBackupList && (
                 <View style={{ gap: 8, marginTop: 4 }}>
+                  <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+                    Make a fresh backup before restoring if you might want to undo today’s local changes.
+                  </Text>
                   {backupList.length === 0 ? (
                     <Text variant="bodySmall" style={{ color: themeColors.outline }}>
-                      No backups yet — tap "Backup now" to create one.
+                      No backups found — tap "Backup now" to create one.
                     </Text>
                   ) : (
                     backupList.map((b) => (
@@ -625,7 +625,7 @@ export default function SettingsScreen() {
                             {b.name.replace('orbit_backup_', '').replace('.json', '')}
                           </Text>
                           <Text variant="labelSmall" style={{ color: themeColors.outline }}>
-                            {b.created_at ? new Date(b.created_at).toLocaleDateString() : ''}
+                            {b.created_at ? `${new Date(b.created_at).toLocaleDateString()} · ${new Date(b.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Date unavailable'}
                           </Text>
                         </View>
                         <Button
@@ -633,7 +633,7 @@ export default function SettingsScreen() {
                           compact
                           loading={isRestoring}
                           onPress={() => handleRestore(b.name)}
-                          disabled={isRestoring}
+                          disabled={backupActionInFlight || !backupConnectionReady}
                           accessibilityLabel={`Restore backup ${b.name}`}
                         >
                           Restore
