@@ -96,6 +96,10 @@ export default function NewContactScreen() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
       <Text variant="headlineSmall">Add a person</Text>
 
+      <Button mode="contained-tonal" icon="contacts" onPress={() => router.push('/contact/import')}>
+        Import from Contacts
+      </Button>
+
       {/* ── Photo + Name ─────────────────────────────── */}
       <View style={styles.avatarSection}>
         <Pressable onPress={handlePickPhoto} style={styles.avatarWrapper}>

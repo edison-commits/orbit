@@ -8,7 +8,10 @@ const MONTHS = [
 ];
 
 const getDaysInMonth = (month: number, year: number) => {
-  if (month === 2) return year % 4 === 0 ? 29 : 28;
+  if (month === 2) {
+    const isLeapYear = year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0);
+    return isLeapYear ? 29 : 28;
+  }
   return [1, 3, 5, 7, 8, 10, 12].includes(month) ? 31 : 30;
 };
 
@@ -27,35 +30,53 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
   const [selectedMonth, setSelectedMonth] = useState<number>(1);
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedHasYear, setSelectedHasYear] = useState(true);
 
   const parseValue = () => {
-    if (!value) return { month: 1, day: 1, year: currentYear };
+    if (!value) return { month: 1, day: 1, year: currentYear, hasYear: true };
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      return { month: month || 1, day: day || 1, year: year || currentYear, hasYear: true };
+    }
+
+    if (/^\d{1,2}[-/]\d{1,2}$/.test(value)) {
+      const [month, day] = value.split(/[-/]/).map(Number);
+      return { month: month || 1, day: day || 1, year: 2000, hasYear: false };
+    }
+
     const parts = value.split(' ');
-    if (parts.length < 2) return { month: 1, day: 1, year: currentYear };
+    if (parts.length < 2) return { month: 1, day: 1, year: currentYear, hasYear: true };
     const monthStr = parts[0].replace(',', '');
     const month = MONTHS.findIndex((m) => m.startsWith(monthStr)) + 1 || 1;
     const dayPart = parts[1].replace(',', '').replace(/[^0-9]/g, '');
     const day = parseInt(dayPart) || 1;
-    const yearPart = parts[2] || String(currentYear);
+    const hasYear = Boolean(parts[2]);
+    const yearPart = parts[2] || '2000';
     const year = parseInt(yearPart) || currentYear;
-    return { month, day, year };
+    return { month, day, year, hasYear };
   };
 
   const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const handleOpen = () => {
-    const { month, day, year } = parseValue();
+    const { month, day, year, hasYear } = parseValue();
     const validDaysForBirthday = getDaysInMonth(month, year);
     setSelectedMonth(month);
     setSelectedDay(Math.min(day, validDaysForBirthday));
     setSelectedYear(year);
+    setSelectedHasYear(hasYear);
     setShowPicker(true);
   };
 
   const handleConfirm = () => {
     const monthStr = MONTHS[selectedMonth - 1];
-    onChange(`${monthStr} ${selectedDay}, ${selectedYear}`);
+    if (!selectedHasYear) {
+      onChange(`${String(selectedMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`);
+    } else {
+      onChange(`${monthStr} ${selectedDay}, ${selectedYear}`);
+    }
     setShowPicker(false);
   };
 
@@ -174,6 +195,17 @@ export function BirthdayPicker({ value, onChange }: BirthdayPickerProps) {
             </ScrollView>
           </View>
         </View>
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: selectedHasYear }}
+          accessibilityLabel="Toggle whether birthday year is known"
+          onPress={() => setSelectedHasYear((value) => !value)}
+          style={[styles.yearKnownToggle, { borderColor: colors.outlineVariant, backgroundColor: colors.surfaceVariant }]}
+        >
+          <Text style={{ color: colors.onSurfaceVariant }}>
+            Year known: {selectedHasYear ? 'Yes' : 'No'}
+          </Text>
+        </Pressable>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
           <Pressable
             accessibilityRole="button"
@@ -250,6 +282,14 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 14,
+  },
+  yearKnownToggle: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
   },
   btn: {
     flex: 1,
