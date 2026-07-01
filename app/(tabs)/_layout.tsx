@@ -66,6 +66,17 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="review"
+          options={{
+            title: 'Review',
+            tabBarLabel: 'Review',
+            headerTitle: 'Weekly Review',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="chart-timeline-variant" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="settings"
           options={{
             title: 'Settings',

@@ -20,7 +20,7 @@ import {
   formatBirthday,
   getDaysUntilBirthday,
 } from '@/lib/dates';
-import { SNOOZE_OPTIONS } from '@/lib/reminders';
+import { getEffectiveDueAt, SNOOZE_OPTIONS } from '@/lib/reminders';
 import { formatSocialHandle, getSocialUrls } from '@/lib/social';
 import { parseTags } from '@/lib/tags';
 import type { InteractionTimelineItem } from '@/types/models';
@@ -38,6 +38,10 @@ function getDueIcon(dueState: string): string {
   if (dueState === 'overdue') return 'alert-circle';
   if (dueState === 'due') return 'clock-outline';
   return 'check-circle';
+}
+
+function isActiveSnooze(value: string | null | undefined) {
+  return Boolean(value && new Date(value) > new Date());
 }
 
 export default function ContactDetailScreen() {
@@ -140,9 +144,11 @@ export default function ContactDetailScreen() {
 
 
   const dueColor = getDueColor(contact.dueState);
-  const dueDays = getDaysUntilDate(contact.nextDueAt);
+  const effectiveDueAt = getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil);
+  const dueDays = getDaysUntilDate(effectiveDueAt);
   const birthdayDays = getDaysUntilBirthday(contact.birthday);
   const tags = parseTags(contact.tagsJson);
+  const hasActiveSnooze = isActiveSnooze(contact.cadenceSnoozedUntil);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
@@ -171,7 +177,7 @@ export default function ContactDetailScreen() {
           <Chip compact style={{ backgroundColor: colors.surfaceVariant }}>
             {contact.relationshipType}
           </Chip>
-          {contact.cadenceSnoozedUntil ? (
+          {hasActiveSnooze ? (
             <Chip compact icon="clock-outline" style={{ backgroundColor: colors.tertiaryContainer }}>
               snoozed
             </Chip>
@@ -208,7 +214,7 @@ export default function ContactDetailScreen() {
             <Icon source={getDueIcon(contact.dueState)} size={28} color={dueColor} />
             <View>
               <Text variant="titleMedium" style={{ color: dueColor, fontWeight: '600' }}>
-                {formatDueLabel(contact.nextDueAt)}
+                {formatDueLabel(effectiveDueAt)}
               </Text>
               <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                 {contact.dueState === 'overdue'
@@ -386,7 +392,7 @@ export default function ContactDetailScreen() {
                 {option.label}
               </Button>
             ))}
-            {contact.cadenceSnoozedUntil ? (
+            {hasActiveSnooze ? (
               <Button
                 mode="text"
                 compact

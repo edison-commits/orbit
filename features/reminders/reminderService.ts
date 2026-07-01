@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { settingsService } from '@/features/settings/settingsService';
-import { getReminderTriggerAt } from '@/lib/reminders';
+import { getEffectiveDueAt, getReminderTriggerAt } from '@/lib/reminders';
 
 const ORBIT_REMINDER_KIND = 'orbit-due-contact';
 
@@ -88,7 +88,7 @@ export const reminderService = {
     let scheduled = 0;
 
     for (const contact of remindableContacts) {
-      const triggerAt = getReminderTriggerAt(contact.nextDueAt);
+      const triggerAt = getReminderTriggerAt(getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil));
       if (!triggerAt) continue;
 
       await Notifications.scheduleNotificationAsync({

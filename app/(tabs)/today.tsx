@@ -4,6 +4,7 @@ import { Pressable, RefreshControl, ScrollView, View, StyleSheet } from 'react-n
 import { Button, Card, Chip, Icon, Text, useTheme } from 'react-native-paper';
 import { contactsRepository, type ContactsListItem } from '@/db/repositories/contactsRepository';
 import { formatDueLabel, getDaysUntilBirthday, getDaysUntilDate, getDueColor } from '@/lib/dates';
+import { getEffectiveDueAt } from '@/lib/reminders';
 
 type AgendaSection = {
   key: string;
@@ -37,7 +38,7 @@ function buildAgendaSections(contacts: ContactsListItem[], colors: { tertiary: s
   const upcomingThisWeek = standardContacts
     .filter((contact) => {
       if (contact.dueState !== 'upcoming' || birthdayContactIds.has(contact.id)) return false;
-      const days = getDaysUntilDate(contact.nextDueAt);
+      const days = getDaysUntilDate(getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil));
       return days !== null && days > 0 && days <= 7;
     });
 
@@ -222,8 +223,8 @@ export default function TodayScreen() {
                             <Text variant="bodyLarge" numberOfLines={1}>{contact.name}</Text>
                             <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
                               {birthdayLabel
-                                ? `${formatDueLabel(contact.nextDueAt)} · ${birthdayLabel}`
-                                : formatDueLabel(contact.nextDueAt)}
+                                ? `${formatDueLabel(getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil))} · ${birthdayLabel}`
+                                : formatDueLabel(getEffectiveDueAt(contact.nextDueAt, contact.cadenceSnoozedUntil))}
                             </Text>
                           </View>
                         </Pressable>

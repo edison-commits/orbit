@@ -53,10 +53,22 @@ function effectiveDueSql() {
   END`;
 }
 
+function withDerivedDueState<T extends Contact>(contact: T): T {
+  return {
+    ...contact,
+    dueState: deriveContactDueState(
+      contact.nextDueAt,
+      contact.cadenceSnoozedUntil,
+      Boolean(contact.isPaused),
+      Boolean(contact.isArchived),
+    ),
+  };
+}
+
 export const contactsRepository = {
   listByUrgency(): ContactsListItem[] {
     const db = getDb();
-    return db.getAllSync<ContactsListItem>(
+    const rows = db.getAllSync<ContactsListItem>(
       `SELECT
         id,
         name,
@@ -76,7 +88,7 @@ export const contactsRepository = {
         is_paused as isPaused,
         is_archived as isArchived,
         last_interaction_at as lastInteractionAt,
-        ${effectiveDueSql()} as nextDueAt,
+        next_due_at as nextDueAt,
         due_state as dueState,
         created_at as createdAt,
         updated_at as updatedAt
@@ -84,6 +96,17 @@ export const contactsRepository = {
       WHERE is_archived = 0
       ORDER BY is_paused ASC, CASE due_state WHEN 'overdue' THEN 0 WHEN 'due' THEN 1 ELSE 2 END, ${effectiveDueSql()} ASC, name COLLATE NOCASE ASC;`,
     );
+
+    const rank = { overdue: 0, due: 1, upcoming: 2, birthday: 3 } as const;
+    return rows
+      .map(withDerivedDueState)
+      .sort((a, b) => {
+        const aEffectiveDueAt = getEffectiveDueAt(a.nextDueAt, a.cadenceSnoozedUntil);
+        const bEffectiveDueAt = getEffectiveDueAt(b.nextDueAt, b.cadenceSnoozedUntil);
+        const aDueAt = a.isPaused || !aEffectiveDueAt ? Number.POSITIVE_INFINITY : new Date(aEffectiveDueAt).getTime();
+        const bDueAt = b.isPaused || !bEffectiveDueAt ? Number.POSITIVE_INFINITY : new Date(bEffectiveDueAt).getTime();
+        return rank[a.dueState] - rank[b.dueState] || aDueAt - bDueAt || a.name.localeCompare(b.name);
+      });
   },
   listAll(): Contact[] {
     const db = getDb();
@@ -113,7 +136,7 @@ export const contactsRepository = {
         updated_at as updatedAt
       FROM contacts
       ORDER BY created_at ASC, name COLLATE NOCASE ASC;`,
-    );
+    ).map(withDerivedDueState);
   },
   listRemindable(): Contact[] {
     const db = getDb();
@@ -137,17 +160,17 @@ export const contactsRepository = {
         is_paused as isPaused,
         is_archived as isArchived,
         last_interaction_at as lastInteractionAt,
-        ${effectiveDueSql()} as nextDueAt,
+        next_due_at as nextDueAt,
         due_state as dueState,
         created_at as createdAt,
         updated_at as updatedAt
       FROM contacts
       WHERE is_archived = 0 AND is_paused = 0 AND ${effectiveDueSql()} IS NOT NULL;`,
-    );
+    ).map(withDerivedDueState);
   },
   getById(id: string): Contact | null {
     const db = getDb();
-    return (
+    const contact =
       db.getFirstSync<Contact>(
         `SELECT
           id,
@@ -168,14 +191,16 @@ export const contactsRepository = {
           is_paused as isPaused,
           is_archived as isArchived,
           last_interaction_at as lastInteractionAt,
-          ${effectiveDueSql()} as nextDueAt,
+          next_due_at as nextDueAt,
           due_state as dueState,
           created_at as createdAt,
           updated_at as updatedAt
         FROM contacts WHERE id = ? LIMIT 1;`,
         [id],
-      ) ?? null
-    );
+      ) ?? null;
+
+    if (!contact) return null;
+    return withDerivedDueState(contact);
   },
   create(input: CreateContactRecord): Contact {
     const db = getDb();
@@ -422,43 +447,55 @@ export const contactsRepository = {
     return rows.length;
   },
   getSummaryCounts(): ContactsSummaryCounts {
-    const db = getDb();
-    const row = db.getFirstSync<ContactsSummaryCounts>(
-      `SELECT
-        SUM(CASE WHEN due_state = 'overdue' THEN 1 ELSE 0 END) as overdue,
-        SUM(CASE WHEN due_state = 'due' THEN 1 ELSE 0 END) as due,
-        SUM(CASE WHEN due_state = 'upcoming' THEN 1 ELSE 0 END) as upcoming
-       FROM contacts
-       WHERE is_archived = 0 AND is_paused = 0;`,
-    );
-
-    return {
-      overdue: row?.overdue ?? 0,
-      due: row?.due ?? 0,
-      upcoming: row?.upcoming ?? 0,
-    };
+    const counts = { overdue: 0, due: 0, upcoming: 0 };
+    for (const contact of this.listByUrgency()) {
+      if (contact.isPaused) continue;
+      if (contact.dueState === 'overdue') counts.overdue += 1;
+      else if (contact.dueState === 'due') counts.due += 1;
+      else counts.upcoming += 1;
+    }
+    return counts;
   },
   refreshAfterInteraction(contactId: string, occurredAt: string) {
     const db = getDb();
-    const contact = db.getFirstSync<{ cadence: number; isPaused: number; isArchived: number }>(
-      `SELECT cadence, is_paused as isPaused, is_archived as isArchived FROM contacts WHERE id = ? LIMIT 1;`,
+    const contact = db.getFirstSync<{
+      cadence: number;
+      isPaused: number;
+      isArchived: number;
+      lastInteractionAt: string | null;
+      cadenceSnoozedUntil: string | null;
+    }>(
+      `SELECT
+         cadence,
+         is_paused as isPaused,
+         is_archived as isArchived,
+         last_interaction_at as lastInteractionAt,
+         cadence_snoozed_until as cadenceSnoozedUntil
+       FROM contacts
+       WHERE id = ?
+       LIMIT 1;`,
       [contactId],
     );
 
     if (!contact) throw new Error('Contact not found');
 
-    const nextDueAt = calculateNextDueAt(occurredAt, contact.cadence);
-    const dueState = deriveContactDueState(nextDueAt, null, Boolean(contact.isPaused), Boolean(contact.isArchived));
+    const existingInteractionDate = contact.lastInteractionAt ? new Date(contact.lastInteractionAt) : null;
+    const occurredDate = new Date(occurredAt);
+    const isNewLatestInteraction = !existingInteractionDate || occurredDate >= existingInteractionDate;
+    const latestInteractionAt = isNewLatestInteraction ? occurredAt : contact.lastInteractionAt!;
+    const cadenceSnoozedUntil = isNewLatestInteraction ? null : contact.cadenceSnoozedUntil;
+    const nextDueAt = calculateNextDueAt(latestInteractionAt, contact.cadence);
+    const dueState = deriveContactDueState(nextDueAt, cadenceSnoozedUntil, Boolean(contact.isPaused), Boolean(contact.isArchived));
 
     db.runSync(
       `UPDATE contacts
        SET last_interaction_at = ?,
            next_due_at = ?,
-           cadence_snoozed_until = NULL,
+           cadence_snoozed_until = ?,
            due_state = ?,
            updated_at = ?
        WHERE id = ?;`,
-      [occurredAt, nextDueAt, dueState, toIsoNow(), contactId],
+      [latestInteractionAt, nextDueAt, cadenceSnoozedUntil, dueState, toIsoNow(), contactId],
     );
   },
   getEffectiveDueAt(contact: Pick<Contact, 'nextDueAt' | 'cadenceSnoozedUntil'>) {
