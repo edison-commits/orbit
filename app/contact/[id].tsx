@@ -22,6 +22,7 @@ import {
 } from '@/lib/dates';
 import { SNOOZE_OPTIONS } from '@/lib/reminders';
 import { formatSocialHandle, getSocialUrls } from '@/lib/social';
+import { parseTags } from '@/lib/tags';
 import type { InteractionTimelineItem } from '@/types/models';
 
 const INTERACTION_ICONS: Record<string, string> = {
@@ -141,6 +142,7 @@ export default function ContactDetailScreen() {
   const dueColor = getDueColor(contact.dueState);
   const dueDays = getDaysUntilDate(contact.nextDueAt);
   const birthdayDays = getDaysUntilBirthday(contact.birthday);
+  const tags = parseTags(contact.tagsJson);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
@@ -185,6 +187,15 @@ export default function ContactDetailScreen() {
             </Chip>
           ) : null}
         </View>
+        {tags.length > 0 ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+            {tags.map((tag) => (
+              <Chip key={tag} compact icon="tag-outline" style={{ backgroundColor: colors.surfaceVariant }}>
+                {tag}
+              </Chip>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       {/* Due status banner */}

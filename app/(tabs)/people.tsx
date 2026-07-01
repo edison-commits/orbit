@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useFocusEffect, router } from 'expo-router';
 import { FlatList, View, Image, Pressable, StyleSheet, RefreshControl } from 'react-native';
 import { Button, Card, Chip, IconButton, Searchbar, Text, Surface, useTheme } from 'react-native-paper';
@@ -7,12 +7,14 @@ import { formatDueLabel, formatDaysAgo } from '@/lib/dates';
 import { useUiStore } from '@/store/ui';
 import { DUE_COLORS } from '@/lib/theme';
 import { getDueColor } from '@/lib/dates';
+import { parseTags } from '@/lib/tags';
 
 export default function PeopleScreen() {
   const dueFilter = useUiStore((state) => state.dueFilter);
   const setDueFilter = useUiStore((state) => state.setDueFilter);
   const [contacts, setContacts] = useState(() => contactsRepository.listByUrgency());
   const [search, setSearch] = useState('');
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
 
@@ -35,15 +37,33 @@ export default function PeopleScreen() {
     });
   }, [reloadContacts]);
 
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    contacts.forEach((contact) => parseTags(contact.tagsJson).forEach((tag) => tags.add(tag)));
+    return Array.from(tags).sort((a, b) => a.localeCompare(b));
+  }, [contacts]);
+
   const filtered = useMemo(
     () =>
-      contacts.filter(
-        (c) =>
-          (dueFilter === 'all' || c.dueState === dueFilter) &&
-          (search.trim() === '' || c.name.toLowerCase().includes(search.toLowerCase().trim())),
-      ),
-    [contacts, dueFilter, search],
+      contacts.filter((c) => {
+        const tags = parseTags(c.tagsJson);
+        const q = search.toLowerCase().trim();
+        const matchesDue = dueFilter === 'all' || c.dueState === dueFilter;
+        const matchesTag = !tagFilter || tags.includes(tagFilter);
+        const matchesSearch =
+          q === '' ||
+          c.name.toLowerCase().includes(q) ||
+          tags.some((tag) => tag.toLowerCase().includes(q));
+        return matchesDue && matchesTag && matchesSearch;
+      }),
+    [contacts, dueFilter, search, tagFilter],
   );
+
+  useEffect(() => {
+    if (tagFilter && !availableTags.includes(tagFilter)) {
+      setTagFilter(null);
+    }
+  }, [availableTags, tagFilter]);
 
   const listData = useMemo(() => {
     const items: Array<{ type: 'contact'; contact: (typeof filtered)[0] } | { type: 'footer' }> =
@@ -108,6 +128,15 @@ export default function PeopleScreen() {
                     {formatDueLabel(contact.nextDueAt)}
                     {contact.lastInteractionAt ? ` · ${formatDaysAgo(contact.lastInteractionAt)}` : ''}
                   </Text>
+                  {parseTags(contact.tagsJson).length > 0 ? (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {parseTags(contact.tagsJson).slice(0, 3).map((tag) => (
+                        <Chip key={tag} compact style={styles.tagChip} textStyle={styles.tagText}>
+                          {tag}
+                        </Chip>
+                      ))}
+                    </View>
+                  ) : null}
                 </View>
                 <View style={styles.right}>
                   {contact.isPaused ? (
@@ -153,8 +182,8 @@ export default function PeopleScreen() {
   const ListHeader = (
     <View style={{ paddingHorizontal: 16, gap: 12 }}>
       <Searchbar
-        placeholder="Search by name…"
-        accessibilityLabel="Search people by name"
+        placeholder="Search by name or tag…"
+        accessibilityLabel="Search people by name or tag"
         value={search}
         onChangeText={setSearch}
         style={styles.searchbar}
@@ -181,6 +210,21 @@ export default function PeopleScreen() {
           </Chip>
         ))}
       </View>
+      {availableTags.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {availableTags.map((tag) => (
+            <Chip
+              key={tag}
+              compact
+              icon="tag-outline"
+              selected={tagFilter === tag}
+              onPress={() => setTagFilter(tagFilter === tag ? null : tag)}
+            >
+              {tag}
+            </Chip>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -188,13 +232,13 @@ export default function PeopleScreen() {
     <View style={{ paddingHorizontal: 16 }}>
       <Card>
         <Card.Content style={{ gap: 8 }}>
-          <Text variant="titleMedium">{search ? 'No matches' : 'No people yet'}</Text>
+          <Text variant="titleMedium">{search || tagFilter || dueFilter !== 'all' ? 'No matches' : 'No people yet'}</Text>
           <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-            {search
-              ? `Nobody named "${search}" in your orbit.`
+            {search || tagFilter || dueFilter !== 'all'
+              ? `No people match the current filters${search ? ` for "${search}"` : ''}.`
               : 'Add the people you want to stay connected with.'}
           </Text>
-          {!search && (
+          {!search && !tagFilter && dueFilter === 'all' && (
             <Link href="/contact/new" asChild style={{ marginTop: 4 }}>
               <Button mode="contained" icon="plus" accessibilityLabel="Add your first person">
                 Add your first person
@@ -264,6 +308,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   stateChip: {
+  },
+  tagChip: {
+    height: 24,
+  },
+  tagText: {
+    fontSize: 11,
   },
   quickLog: {
     position: 'absolute',

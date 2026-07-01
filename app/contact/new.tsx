@@ -17,6 +17,7 @@ import { settingsService } from '@/features/settings/settingsService';
 import { BirthdayPicker } from '@/components/BirthdayPicker';
 import { RELATIONSHIP_TYPES, CADENCE_OPTIONS_DAYS, DEFAULT_RELATIONSHIP_TYPE } from '@/lib/constants';
 import { normalizeSocialHandle } from '@/lib/social';
+import { tagsToJson } from '@/lib/tags';
 import { orbitTheme } from '@/lib/theme';
 
 // Lazy-load image picker to avoid bundling it until the form is opened
@@ -38,6 +39,7 @@ export default function NewContactScreen() {
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
+  const [tags, setTags] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +81,7 @@ export default function NewContactScreen() {
         phone: phone.trim() || null,
         email: email.trim() || null,
         socialJson: Object.keys(social).length > 0 ? JSON.stringify(social) : null,
+        tagsJson: tagsToJson(tags),
         photoUri: photoUri,
       });
       router.replace(`/contact/${contact.id}`);
@@ -239,6 +242,20 @@ export default function NewContactScreen() {
               left={<TextInput.Icon icon="linkedin" />}
               style={{ backgroundColor: colors.surface }}
             />
+          </View>
+
+          {/* Tags */}
+          <View style={{ gap: 8 }}>
+            <Text variant="titleMedium">Tags</Text>
+            <TextInput
+              label="Tags"
+              value={tags}
+              onChangeText={setTags}
+              placeholder="work, family, gym"
+              autoCapitalize="none"
+              style={{ backgroundColor: colors.surface }}
+            />
+            <HelperText type="info">Separate tags with commas. Tags help filter and review your orbit.</HelperText>
           </View>
 
           {/* Notes */}
