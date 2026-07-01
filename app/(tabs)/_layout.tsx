@@ -44,6 +44,17 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="today"
+          options={{
+            title: 'Today',
+            tabBarLabel: 'Today',
+            headerTitle: 'Today',
+            tabBarIcon: ({ color, size }) => (
+              <Icon source="calendar-today" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="people"
           options={{
             title: 'People',
