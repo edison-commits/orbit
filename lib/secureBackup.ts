@@ -11,6 +11,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { interactionsRepository } from '@/db/repositories/interactionsRepository';
 import { feedbackRepository } from '@/db/repositories/feedbackRepository';
+import { settingsService } from '@/features/settings/settingsService';
 import type { Contact, Interaction, InteractionContact } from '@/types/models';
 
 const SUPABASE_URL = 'https://jkdgdcfpgxjfdlccvqjf.supabase.co';
@@ -112,11 +113,6 @@ export async function createBackup(): Promise<string> {
 
   const supabase = getClient(key);
 
-  const { getDb } = require('@/db/client') as { getDb: () => { getFirstSync<T>(sql: string, params: unknown[]): T | null } };
-  const defaultCadence =
-    getDb().getFirstSync<{ value: string }>('SELECT value FROM app_meta WHERE key = ?;', ['defaultCadence']) ??
-    { value: '30' };
-
   const backup: OrbitBackup = {
     version: 1,
     exported_at: new Date().toISOString(),
@@ -124,7 +120,7 @@ export async function createBackup(): Promise<string> {
     interactions: interactionsRepository.listAll(),
     interactionContacts: interactionsRepository.listContactLinks(),
     feedback: feedbackRepository.getAll(),
-    meta: [{ defaultCadence: parseInt(defaultCadence.value, 10) }],
+    meta: [{ defaultCadence: settingsService.getDefaultCadence() }],
   };
 
   const date = new Date().toISOString().slice(0, 10);
@@ -165,6 +161,7 @@ export async function restoreBackup(filename: string): Promise<void> {
   const backup: OrbitBackup = JSON.parse(text);
 
   if (!backup.version || !backup.contacts) throw new Error('Invalid backup file');
+  const currentNotificationsEnabled = settingsService.getNotificationsPreference();
 
   const { getDb } = require('@/db/client') as { getDb: () => {
     withTransactionSync(fn: () => void): void;
@@ -240,9 +237,14 @@ export async function restoreBackup(filename: string): Promise<void> {
       );
     }
 
-    if (backup.meta?.[0]) {
-      db.runSync(`INSERT INTO app_meta (key,value) VALUES ('defaultCadence',?);`, [
-        String(backup.meta[0].defaultCadence),
+    db.runSync(`INSERT INTO app_meta (key,value) VALUES ('default_cadence_days',?);`, [
+      String(backup.meta?.[0]?.defaultCadence ?? 30),
+    ]);
+    // Reminder opt-in is device-local consent. Preserve this device's explicit setting across restores.
+    // If this device has no explicit local choice yet, keep the preference unset rather than manufacturing one.
+    if (currentNotificationsEnabled !== null) {
+      db.runSync(`INSERT INTO app_meta (key,value) VALUES ('notifications_enabled',?);`, [
+        currentNotificationsEnabled ? 'true' : 'false',
       ]);
     }
   });

@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ScrollView, View, StyleSheet, Alert, Linking } from 'react-native';
-import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator, useTheme } from 'react-native-paper';
+import { Button, Card, Chip, Divider, Text, TextInput, IconButton, ActivityIndicator, Switch, useTheme } from 'react-native-paper';
 import { settingsService } from '@/features/settings/settingsService';
+import { reminderService, type ReminderSyncResult } from '@/features/reminders/reminderService';
 import { CADENCE_OPTIONS_DAYS } from '@/lib/constants';
 import { useUiStore, type ThemeMode } from '@/store/ui';
 import { feedbackRepository, Feedback, FeedbackType } from '@/db/repositories/feedbackRepository';
@@ -43,6 +44,9 @@ function timeAgo(dateStr: string): string {
 
 export default function SettingsScreen() {
   const [defaultCadence, setDefaultCadence] = useState(settingsService.getDefaultCadence());
+  const [notificationsEnabled, setNotificationsEnabled] = useState(settingsService.getNotificationsEnabled());
+  const [notificationStatus, setNotificationStatus] = useState<ReminderSyncResult | null>(null);
+  const [isSyncingNotifications, setIsSyncingNotifications] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const themeMode = useUiStore((s) => s.themeMode);
   const setThemeMode = useUiStore((s) => s.setThemeMode);
@@ -73,6 +77,26 @@ export default function SettingsScreen() {
     settingsService.setDefaultCadence(days);
   }
 
+  async function handleNotificationsToggle(enabled: boolean) {
+    setIsSyncingNotifications(true);
+    try {
+      const result = await reminderService.setNotificationsEnabled(enabled);
+      setNotificationsEnabled(result.notificationsEnabled);
+      setNotificationStatus(result);
+
+      if (enabled && !result.permissionGranted) {
+        Alert.alert(
+          'Notifications not enabled',
+          'Orbit could not get notification permission. After enabling notifications in system settings, return here and turn reminders on again.',
+        );
+      }
+    } catch (e: unknown) {
+      Alert.alert('Notification setup failed', e instanceof Error ? e.message : 'Could not update reminders.');
+    } finally {
+      setIsSyncingNotifications(false);
+    }
+  }
+
   function handleResetData() {
     Alert.alert(
       'Reset all data?',
@@ -82,12 +106,30 @@ export default function SettingsScreen() {
         {
           text: 'Reset everything',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             setIsResetting(true);
-            settingsService.resetAllData();
-            setDefaultCadence(30);
-            setIsResetting(false);
-            Alert.alert('Done', 'All data has been cleared.');
+            try {
+              settingsService.resetAllData();
+              setDefaultCadence(30);
+              setNotificationsEnabled(false);
+              try {
+                const reminderStatus = await reminderService.setNotificationsEnabled(false);
+                setNotificationStatus(reminderStatus);
+                Alert.alert('Done', 'All data has been cleared and reminders have been turned off.');
+              } catch (reminderError) {
+                setNotificationStatus({ scheduled: 0, permissionGranted: false, notificationsEnabled: false });
+                Alert.alert(
+                  'Data cleared',
+                  `All data has been cleared. Orbit could not confirm scheduled reminders were canceled: ${
+                    reminderError instanceof Error ? reminderError.message : 'Unknown error'
+                  }`,
+                );
+              }
+            } catch (e: unknown) {
+              Alert.alert('Reset failed', e instanceof Error ? e.message : 'Could not clear all data.');
+            } finally {
+              setIsResetting(false);
+            }
           },
         },
       ],
@@ -173,7 +215,25 @@ export default function SettingsScreen() {
             setIsRestoring(true);
             try {
               await restoreBackup(filename);
-              Alert.alert('Done', 'Your data has been restored.');
+              setDefaultCadence(settingsService.getDefaultCadence());
+              try {
+                const reminderStatus = await reminderService.syncNotifications();
+                setNotificationStatus(reminderStatus);
+                setNotificationsEnabled(reminderStatus.notificationsEnabled);
+                Alert.alert(
+                  'Done',
+                  reminderStatus.notificationsEnabled && !reminderStatus.permissionGranted
+                    ? 'Your data has been restored. This device has reminders turned on, but Orbit needs notification permission before reminders can be scheduled.'
+                    : 'Your data has been restored.',
+                );
+              } catch (reminderError) {
+                Alert.alert(
+                  'Data restored',
+                  `Your data has been restored, but Orbit could not refresh reminders: ${
+                    reminderError instanceof Error ? reminderError.message : 'Unknown error'
+                  }`,
+                );
+              }
               setShowBackupList(false);
             } catch (e: unknown) {
               Alert.alert('Restore failed', e instanceof Error ? e.message : 'Unknown error');
@@ -245,6 +305,13 @@ export default function SettingsScreen() {
         const result = await testConnection();
         setConnectionStatus(result.ok ? 'ok' : 'error');
       }
+      try {
+        const reminderStatus = await reminderService.syncNotifications();
+        setNotificationStatus(reminderStatus);
+        setNotificationsEnabled(reminderStatus.notificationsEnabled);
+      } catch {
+        // Leave reminder status empty; the toggle can retry explicitly.
+      }
     })();
   }, []);
 
@@ -272,6 +339,46 @@ export default function SettingsScreen() {
               </Chip>
             ))}
           </View>
+        </Card.Content>
+      </Card>
+
+      {/* Reminders */}
+      <Card>
+        <Card.Content style={{ gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text variant="titleMedium">Check-in reminders</Text>
+              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant, marginTop: 2 }}>
+                Schedule private local notifications when someone is due. Orbit only shows names — never notes.
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              disabled={isSyncingNotifications}
+              onValueChange={handleNotificationsToggle}
+              accessibilityLabel={notificationsEnabled ? 'Turn off check-in reminders' : 'Turn on check-in reminders'}
+            />
+          </View>
+          {isSyncingNotifications ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <ActivityIndicator size="small" />
+              <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+                Updating reminder schedule…
+              </Text>
+            </View>
+          ) : notificationStatus ? (
+            <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+              {notificationStatus.notificationsEnabled && notificationStatus.permissionGranted
+                ? `${notificationStatus.scheduled} reminder${notificationStatus.scheduled === 1 ? '' : 's'} scheduled.`
+                : notificationsEnabled
+                  ? 'Notifications need permission before reminders can be scheduled.'
+                  : 'Reminders are off.'}
+            </Text>
+          ) : (
+            <Text variant="bodySmall" style={{ color: themeColors.onSurfaceVariant }}>
+              {notificationsEnabled ? 'Reminders will stay synced as you add people, snooze, pause, archive, or log interactions.' : 'Reminders are off — turn them on when you want Orbit to nudge you.'}
+            </Text>
+          )}
         </Card.Content>
       </Card>
 

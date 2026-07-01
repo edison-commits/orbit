@@ -2,6 +2,7 @@ import { getDb } from '@/db/client';
 
 const DEFAULT_CADENCE_KEY = 'default_cadence_days';
 const DEFAULT_CADENCE_DEFAULT = 30;
+const NOTIFICATIONS_ENABLED_KEY = 'notifications_enabled';
 
 export const settingsService = {
   getDefaultCadence(): number {
@@ -22,6 +23,29 @@ export const settingsService = {
     );
   },
 
+  getNotificationsEnabled(): boolean {
+    return this.getNotificationsPreference() ?? false;
+  },
+
+  getNotificationsPreference(): boolean | null {
+    const db = getDb();
+    const row = db.getFirstSync<{ value: string }>(
+      `SELECT value FROM app_meta WHERE key = ? LIMIT 1;`,
+      [NOTIFICATIONS_ENABLED_KEY],
+    );
+    if (!row) return null;
+    return row.value === 'true';
+  },
+
+  setNotificationsEnabled(enabled: boolean): void {
+    const db = getDb();
+    db.runSync(
+      `INSERT INTO app_meta (key, value) VALUES (?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value;`,
+      [NOTIFICATIONS_ENABLED_KEY, enabled ? 'true' : 'false'],
+    );
+  },
+
   resetAllData(): void {
     const db = getDb();
     db.runSync(`DELETE FROM interaction_contacts;`);
@@ -33,7 +57,7 @@ export const settingsService = {
   getDefaults() {
     return {
       defaultCadenceDays: this.getDefaultCadence(),
-      notificationsEnabled: true,
+      notificationsEnabled: this.getNotificationsEnabled(),
     };
   },
 };
