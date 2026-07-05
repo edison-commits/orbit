@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:web-sqlite-guard": "node scripts/verify-web-sqlite-guard.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.1",
