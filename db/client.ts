@@ -1,18 +1,28 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 import { initialMigration } from '@/db/migrations/001_initial';
 import { migration003 } from '@/db/migrations/003_feedback';
 import { migration004 } from '@/db/migrations/004_imported_contact_sources';
 
 const DB_NAME = 'orbit.db';
-const db = SQLite.openDatabaseSync(DB_NAME);
+let db: SQLite.SQLiteDatabase | null = null;
 
 export const MIGRATIONS = [initialMigration, migration003, migration004];
 
+function assertNativeDatabaseSupport() {
+  if (Platform.OS === 'web') {
+    throw new Error('Orbit SQLite storage is not available in web preview. Test on iOS/Android for the full local-first database experience.');
+  }
+}
+
 export function getDb() {
+  assertNativeDatabaseSupport();
+  db ??= SQLite.openDatabaseSync(DB_NAME);
   return db;
 }
 
 export async function runMigrations() {
+  const db = getDb();
   db.execSync('PRAGMA foreign_keys = ON;');
   db.execSync('CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, applied_at TEXT NOT NULL);');
 
