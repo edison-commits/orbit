@@ -44,12 +44,14 @@ export default function RootLayout() {
         setIsReady(true);
       })
       .catch((err) => {
-        console.error('Initialization error:', err);
-        // On web, DB may not be available — still show the app
-        if (typeof window !== 'undefined' && 'fetch' in window) {
+        const isWebPreview = typeof window !== 'undefined' && 'fetch' in window;
+        // On web, DB may not be available — still show the app without a scary console error.
+        if (isWebPreview) {
+          console.warn('Web preview storage unavailable:', err);
           setIsReady(true);
           setInitError('Web preview: database not available. Test on iOS/Android for full experience.');
         } else {
+          console.error('Initialization error:', err);
           setInitError(err instanceof Error ? err.message : 'Failed to initialize');
         }
       });
