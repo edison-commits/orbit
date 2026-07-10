@@ -61,9 +61,28 @@ export default function HomeScreen() {
             <Text variant="headlineSmall" style={{ textAlign: 'center' }}>
               Your orbit is empty
             </Text>
-            <Text variant="bodyMedium" style={{ textAlign: 'center', color: colors.onSurfaceVariant, maxWidth: 260 }}>
-              Add the people you want to stay connected with. Orbit handles the rest.
+            <Text variant="bodyMedium" style={{ textAlign: 'center', color: colors.onSurfaceVariant, maxWidth: 280 }}>
+              Add one person to get an instant relationship card and your first follow-up reminder.
             </Text>
+            <View style={{ width: '100%', gap: 8 }}>
+              <View style={[styles.emptyProgress, { backgroundColor: colors.primaryContainer }]}>
+                <Text variant="labelMedium" style={{ color: colors.onPrimaryContainer, fontWeight: '700' }}>
+                  Step 1 of 3 already picked: choose someone you care about
+                </Text>
+              </View>
+              <View style={styles.emptyStepRow}>
+                <Icon source="account-plus" size={16} color={colors.primary} />
+                <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, flex: 1 }}>
+                  Name + relationship are enough to start; details can wait.
+                </Text>
+              </View>
+              <View style={styles.emptyStepRow}>
+                <Icon source="bell-outline" size={16} color={colors.primary} />
+                <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant, flex: 1 }}>
+                  Orbit will suggest when to check in next.
+                </Text>
+              </View>
+            </View>
             <Link href="/contact/new" asChild>
               <Button mode="contained" icon="plus" style={{ marginTop: 4 }}>
                 Add your first person
@@ -238,6 +257,17 @@ const styles = StyleSheet.create({
   },
   countChip: {
     borderRadius: 12,
+  },
+  emptyProgress: {
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  emptyStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 4,
   },
   contactRowOuter: {
     flexDirection: 'row',

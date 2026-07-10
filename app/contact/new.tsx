@@ -99,6 +99,15 @@ export default function NewContactScreen() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
       <Text variant="headlineSmall">Add a person</Text>
 
+      <View style={[styles.progressCard, { backgroundColor: orbitTheme.colors.primaryContainer }]}>
+        <Text variant="labelLarge" style={{ color: orbitTheme.colors.onPrimaryContainer, fontWeight: '700' }}>
+          Step 1 of 3: start with just a name
+        </Text>
+        <Text variant="bodySmall" style={{ color: orbitTheme.colors.onPrimaryContainer }}>
+          Defaults are already set to {relationshipType.toLowerCase()} · every {cadence} days. Save now, add details later.
+        </Text>
+      </View>
+
       <Button mode="contained-tonal" icon="contacts" onPress={() => router.push('/contact/import')}>
         Import from Contacts
       </Button>
@@ -295,6 +304,12 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: 'center',
     gap: 8,
+  },
+  progressCard: {
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
   },
   avatarWrapper: {
     position: 'relative',
