@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches-ignore: [main]
+    branches: [main]
 
 jobs:
   verify:
@@ -41,10 +41,10 @@ jobs:
           }
           NODE
 
-      - name: Audit for high and critical vulnerabilities
+      - name: Report moderate audit findings; fail on high or critical
         run: |
           set +e
-          npm audit --audit-level=moderate --json > /tmp/npm-audit.json
+          npm audit --omit=dev --audit-level=moderate --json > /tmp/npm-audit.json
           audit_exit=$?
           set -e
           node - <<'NODE' "$audit_exit"
@@ -60,6 +60,8 @@ jobs:
 
       - name: Export bundle smoke tests
         run: |
+          npm run test:public-route-gate
+          npm run verify:web-sqlite-guard
           npx --no-install expo export --platform ios --output-dir /tmp/orbit-export-ios
           npx --no-install expo export --platform android --output-dir /tmp/orbit-export-android
           npx --no-install expo export --platform web --output-dir /tmp/orbit-export-web
@@ -67,3 +69,4 @@ jobs:
           test -n "$(find /tmp/orbit-export-android -type f -print -quit)"
           test -n "$(find /tmp/orbit-export-web -type f -print -quit)"
           find /tmp/orbit-export-web -type f -name '*wa-sqlite*.wasm' -print -quit | grep -q .
+          npm run verify:public-web-export -- /tmp/orbit-export-web

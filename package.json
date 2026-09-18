@@ -8,6 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "test:public-route-gate": "node scripts/verify-public-route-init-gate.mjs",
+    "verify:public-web-export": "node scripts/verify-public-web-export.mjs",
     "verify:web-sqlite-guard": "node scripts/verify-web-sqlite-guard.mjs"
   },
   "dependencies": {

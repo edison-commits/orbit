@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { ActivityIndicator, View, Text, StatusBar, useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { runMigrations } from '@/db/client';
@@ -8,11 +8,15 @@ import { reminderService } from '@/features/reminders/reminderService';
 import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
 import { useUiStore } from '@/store/ui';
 
+const PUBLIC_ROUTE_PATHS = new Set(['/landing', '/privacy', '/support', '/contact']);
+
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const systemColorScheme = useColorScheme();
   const themeMode = useUiStore((s) => s.themeMode);
+  const pathname = usePathname();
+  const isPublicRoute = PUBLIC_ROUTE_PATHS.has(pathname);
 
   const isDark =
     themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
@@ -24,8 +28,10 @@ export default function RootLayout() {
   const headerText = isDark ? activeTheme.colors.onSurface : activeTheme.colors.onPrimary;
 
   useEffect(() => {
-    reminderService.configure();
     useUiStore.getState().hydrate();
+    if (isPublicRoute) return;
+
+    reminderService.configure();
 
     runMigrations()
       .then(async () => {
@@ -55,9 +61,9 @@ export default function RootLayout() {
           setInitError(err instanceof Error ? err.message : 'Failed to initialize');
         }
       });
-  }, []);
+  }, [isPublicRoute]);
 
-  if (initError) {
+  if (!isPublicRoute && initError) {
     return (
       <PaperProvider theme={activeTheme}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -67,7 +73,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!isReady) {
+  if (!isPublicRoute && !isReady) {
     return (
       <PaperProvider theme={activeTheme}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
