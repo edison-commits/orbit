@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy — Orbit</title>
+  <meta name="description" content="How Orbit handles local relationship data, optional permissions, reminders, and manual backup and restore.">
+  <link rel="canonical" href="https://orbitcontacts.app/privacy/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Orbit">
+  <meta property="og:title" content="Privacy — Orbit">
+  <meta property="og:description" content="How Orbit handles local relationship data, optional permissions, reminders, and manual backup and restore.">
+  <meta property="og:url" content="https://orbitcontacts.app/privacy/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Privacy — Orbit">
+  <meta name="twitter:description" content="How Orbit handles local relationship data, optional permissions, reminders, and manual backup and restore.">
+  <meta name="theme-color" content="#f7f4ed">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><a class="brand" href="/" aria-label="Orbit home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>Orbit</span></a><nav aria-label="Primary navigation"><a class="" href="/#how-it-works">How it works</a><a class="" href="/privacy/">Privacy</a><a class="" href="/support/">Support</a></nav><a class="header-cta" href="/contact/">Private beta</a></header>
+  <main id="main">
+    <section class="hero hero-compact"><p class="eyebrow">Trust center</p><h1>Privacy should be understandable.</h1><p class="lede">Orbit is designed around a local-first default. This page explains what the app stores, which permissions are optional, and when data can leave your device.</p><p class="beta-note">No public download · No automatic cloud sync · No form submission</p></section>
+
+      <section class="section policy" aria-labelledby="local-data">
+        <h2 id="local-data">Data stored on your device</h2>
+        <p>Orbit stores the information you choose to add in its local app database. This can include names and contact details, photos, relationship type, how you met, birthdays, locations, social links, notes, tags, check-in cadence and status, interaction history, imported-contact markers, feedback saved in the app, and app settings.</p>
+        <p>This information supports Orbit’s people list, Today view, weekly review, check-in timing, and interaction history. Orbit does not require an account for the local app experience.</p>
+      </section>
+      <section class="section policy" aria-labelledby="permissions">
+        <h2 id="permissions">Optional device permissions</h2>
+        <dl>
+          <div><dt>Contacts</dt><dd>Used only when you choose contact import. You select which people to save. The Android app blocks write-contacts permission for this read-only flow.</dd></div>
+          <div><dt>Notifications</dt><dd>Used to schedule private, local check-in reminders. Reminder notifications show names, not relationship notes.</dd></div>
+          <div><dt>Camera and photos</dt><dd>Used only if you choose a profile photo for a person.</dd></div>
+          <div><dt>Microphone</dt><dd>Not required by Orbit.</dd></div>
+        </dl>
+      </section>
+      <section class="section policy" aria-labelledby="backup">
+        <h2 id="backup">Manual backup and restore</h2>
+        <p>Automatic cloud sync is not part of Orbit’s local-first default. The app includes an advanced manual workflow that can upload a JSON backup to Orbit’s configured Supabase storage bucket after a service role key is entered on the device. That key is kept in the device’s secure storage.</p>
+        <p>A backup can contain contacts, tags, interaction history, feedback, import markers, and cadence settings. Treat both backup files and service role keys as sensitive. Restoring replaces the local database; notification consent remains specific to the device.</p>
+      </section>
+      <section class="section policy" aria-labelledby="website-data">
+        <h2 id="website-data">This website and beta requests</h2>
+        <p>This static website has no account flow, analytics, cookies, or submission form. The beta request channel is not connected, so this site does not collect beta-request personal information.</p>
+      </section>
+      <section class="section policy" aria-labelledby="control">
+        <h2 id="control">Retention, deletion, and questions</h2>
+        <p>Local records remain on your device until you edit or delete them, remove the app and its local data, or replace them through restore. Backups remain in the configured storage until they are removed there. Orbit cannot delete a backup it cannot access.</p>
+        <p>A public support contact has not been announced. Until it is, use the <a href="/support/">support guide</a> and do not send private contact details, backup files, passwords, or service keys through unverified channels.</p>
+        <p class="effective">Effective: August 24, 2026</p>
+      </section>
+  </main>
+  <footer><div><a class="brand footer-brand" href="/" aria-label="Orbit home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>Orbit</span></a><p>A local-first relationship manager for thoughtful follow-ups.</p></div><nav aria-label="Trust links"><a class="" href="/privacy/">Privacy</a><a class="" href="/terms/">Terms</a><a class="" href="/support/">Support</a><a class="" href="/contact/">Contact</a></nav><p class="copyright">© 2026 Orbit. Private beta in development.</p></footer>
+</body>
+</html>
