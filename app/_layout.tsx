@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname } from 'expo-router';
 import { ActivityIndicator, View, Text, StatusBar, useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { runMigrations } from '@/db/client';
 import { seedDevData } from '@/db/repositories/devSeed';
 import { reminderService } from '@/features/reminders/reminderService';
+import { createAppInitializationController } from '@/lib/appInitialization';
 import { orbitTheme, orbitDarkTheme } from '@/lib/theme';
 import { useUiStore } from '@/store/ui';
 
@@ -17,6 +18,20 @@ export default function RootLayout() {
   const themeMode = useUiStore((s) => s.themeMode);
   const pathname = usePathname();
   const isPublicRoute = PUBLIC_ROUTE_PATHS.has(pathname);
+  const isAppRouteActive = useRef(!isPublicRoute);
+  isAppRouteActive.current = !isPublicRoute;
+  const initialization = useRef<ReturnType<typeof createAppInitializationController> | null>(null);
+
+  initialization.current ??= createAppInitializationController({
+    isAppRouteActive: () => isAppRouteActive.current,
+    configure: () => reminderService.configure(),
+    migrate: runMigrations,
+    seed: __DEV__ ? seedDevData : undefined,
+    syncNotifications: () => reminderService.syncNotifications(),
+    onSeedError: (error) => console.warn('Seed data error:', error),
+    onSyncError: (error) => console.warn('Notification sync error:', error),
+  });
+  const appInitialization = initialization.current;
 
   const isDark =
     themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
@@ -29,27 +44,20 @@ export default function RootLayout() {
 
   useEffect(() => {
     useUiStore.getState().hydrate();
+  }, []);
+
+  useEffect(() => {
     if (isPublicRoute) return;
 
-    reminderService.configure();
-
-    runMigrations()
-      .then(async () => {
-        if (__DEV__) {
-          try {
-            seedDevData();
-          } catch (e) {
-            console.warn('Seed data error:', e);
-          }
+    let cancelled = false;
+    appInitialization.initialize()
+      .then((result) => {
+        if (!cancelled && isAppRouteActive.current && result === 'ready') {
+          setIsReady(true);
         }
-        try {
-          await reminderService.syncNotifications();
-        } catch (e) {
-          console.warn('Notification sync error:', e);
-        }
-        setIsReady(true);
       })
       .catch((err) => {
+        if (cancelled || !isAppRouteActive.current) return;
         const isWebPreview = typeof window !== 'undefined' && 'fetch' in window;
         // On web, DB may not be available — still show the app without a scary console error.
         if (isWebPreview) {
@@ -61,6 +69,10 @@ export default function RootLayout() {
           setInitError(err instanceof Error ? err.message : 'Failed to initialize');
         }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isPublicRoute]);
 
   if (!isPublicRoute && initError) {

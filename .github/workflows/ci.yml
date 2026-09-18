@@ -41,7 +41,7 @@ jobs:
           }
           NODE
 
-      - name: Report moderate audit findings; fail on high or critical
+      - name: Report moderate production dependency findings; fail on high or critical
         run: |
           set +e
           npm audit --omit=dev --audit-level=moderate --json > /tmp/npm-audit.json
