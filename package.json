@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test:public-route-gate": "node --no-warnings --experimental-strip-types --test scripts/app-initialization.test.mjs",
     "verify:public-web-export": "node scripts/verify-public-web-export.mjs",
-    "verify:web-sqlite-guard": "node scripts/verify-web-sqlite-guard.mjs"
+    "verify:web-sqlite-guard": "node scripts/verify-web-sqlite-guard.mjs",
+    "test": "TZ=UTC node --no-warnings --experimental-strip-types --experimental-loader ./tests/ts-loader.mjs --test tests/*.test.mjs",
+    "verify": "npm test && npm run typecheck && npm run verify:web-sqlite-guard"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.1",
