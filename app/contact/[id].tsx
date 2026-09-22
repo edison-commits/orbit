@@ -4,6 +4,7 @@ import { ScrollView, View, StyleSheet, Linking, Pressable, Image } from 'react-n
 import { Button, Chip, Divider, HelperText, Text, Surface, Icon, useTheme } from 'react-native-paper';
 import { contactsRepository } from '@/db/repositories/contactsRepository';
 import { interactionsRepository } from '@/db/repositories/interactionsRepository';
+import { withAlpha } from '@/lib/colors';
 import {
   clearContactSnooze,
   setContactArchived,
@@ -207,7 +208,7 @@ export default function ContactDetailScreen() {
       {/* Due status banner */}
       {!contact.isPaused && !contact.isArchived ? (
         <Surface
-          style={[styles.dueBanner, { backgroundColor: dueColor + '18', borderColor: dueColor }]}
+          style={[styles.dueBanner, { backgroundColor: withAlpha(dueColor, 0x18 / 0xff), borderColor: dueColor }]}
           elevation={0}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

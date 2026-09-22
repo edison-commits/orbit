@@ -3,6 +3,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Icon, Text, useTheme } from 'react-native-paper';
 import { contactsRepository, type ContactsListItem } from '@/db/repositories/contactsRepository';
+import { withAlpha } from '@/lib/colors';
 import { formatDueLabel, getDaysUntilBirthday, getDaysUntilDate, getDueColor } from '@/lib/dates';
 import { getEffectiveDueAt } from '@/lib/reminders';
 
@@ -193,7 +194,7 @@ export default function TodayScreen() {
                 <Icon source={section.icon} size={20} color={section.color} />
                 <Text variant="titleMedium">{section.title}</Text>
               </View>
-              <Chip compact style={{ backgroundColor: section.color + '18' }} textStyle={{ color: section.color }}>
+              <Chip compact style={{ backgroundColor: withAlpha(section.color, 0x18 / 0xff) }} textStyle={{ color: section.color }}>
                 {section.contacts.length}
               </Chip>
             </View>

@@ -3,6 +3,7 @@ import { Link, router, useFocusEffect } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, View, StyleSheet } from 'react-native';
 import { Button, Card, Chip, Icon, ProgressBar, Text, useTheme } from 'react-native-paper';
 import { getWeeklyReviewSummary, type ReviewPriority } from '@/features/review/weeklyReviewService';
+import { withAlpha } from '@/lib/colors';
 import { getDueColor, getDaysSinceDate, getDaysUntilBirthday } from '@/lib/dates';
 
 const PRIORITY_ICON_COLOR: Record<ReviewPriority, string> = {
@@ -108,11 +109,11 @@ export default function ReviewScreen() {
               <Text variant="headlineSmall" style={{ fontWeight: '700' }}>{summary.activeCount}</Text>
               <Text variant="labelSmall" style={{ color: colors.onSurfaceVariant }}>Active</Text>
             </View>
-            <View style={[styles.metric, { backgroundColor: getDueColor('overdue') + '18' }]}>
+            <View style={[styles.metric, { backgroundColor: withAlpha(getDueColor('overdue'), 0x18 / 0xff) }]}>
               <Text variant="headlineSmall" style={{ color: getDueColor('overdue'), fontWeight: '700' }}>{summary.overdueCount}</Text>
               <Text variant="labelSmall" style={{ color: getDueColor('overdue') }}>Overdue</Text>
             </View>
-            <View style={[styles.metric, { backgroundColor: getDueColor('due') + '18' }]}>
+            <View style={[styles.metric, { backgroundColor: withAlpha(getDueColor('due'), 0x18 / 0xff) }]}>
               <Text variant="headlineSmall" style={{ color: getDueColor('due'), fontWeight: '700' }}>{summary.dueTodayCount}</Text>
               <Text variant="labelSmall" style={{ color: getDueColor('due') }}>Due today</Text>
             </View>
@@ -144,10 +145,10 @@ export default function ReviewScreen() {
               <Card key={action.key} mode="outlined">
                 <Card.Content style={{ gap: 8 }}>
                   <View style={styles.betweenRow}>
-                    <View style={[styles.actionIcon, { backgroundColor: color + '18' }]}>
+                    <View style={[styles.actionIcon, { backgroundColor: withAlpha(color, 0x18 / 0xff) }]}>
                       <Icon source={action.icon} size={18} color={color} />
                     </View>
-                    <Chip compact style={{ backgroundColor: color + '18' }} textStyle={{ color }}>
+                    <Chip compact style={{ backgroundColor: withAlpha(color, 0x18 / 0xff) }} textStyle={{ color }}>
                       {priorityLabel(action.priority)}
                     </Chip>
                   </View>

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View, StyleSheet, RefreshControl } from 'react-n
 import { Button, Card, Chip, Text, Icon, useTheme } from 'react-native-paper';
 import { getHomeAggregates, type BirthdayContactListItem } from '@/features/home/homeService';
 import { contactsRepository, type ContactsSummaryCounts } from '@/db/repositories/contactsRepository';
+import { withAlpha } from '@/lib/colors';
 import { formatDueLabel, getDueColor } from '@/lib/dates';
 import { getEffectiveDueAt } from '@/lib/reminders';
 import { DUE_COLORS } from '@/lib/theme';
@@ -114,13 +115,13 @@ export default function HomeScreen() {
           <Text variant="labelSmall" style={{ color: colors.onPrimaryContainer }}>People</Text>
         </View>
         {(stats.overdue ?? 0) > 0 && (
-          <View style={[styles.statCard, { backgroundColor: DUE_COLORS.overdue + '18' }]}>
+          <View style={[styles.statCard, { backgroundColor: withAlpha(DUE_COLORS.overdue, 0x18 / 0xff) }]}>
             <Text variant="headlineSmall" style={{ color: DUE_COLORS.overdue, fontWeight: '700' }}>{stats.overdue}</Text>
             <Text variant="labelSmall" style={{ color: DUE_COLORS.overdue }}>Overdue</Text>
           </View>
         )}
         {(stats.due ?? 0) > 0 && (
-          <View style={[styles.statCard, { backgroundColor: DUE_COLORS.due + '18' }]}>
+          <View style={[styles.statCard, { backgroundColor: withAlpha(DUE_COLORS.due, 0x18 / 0xff) }]}>
             <Text variant="headlineSmall" style={{ color: DUE_COLORS.due, fontWeight: '700' }}>{stats.due}</Text>
             <Text variant="labelSmall" style={{ color: DUE_COLORS.due }}>Due today</Text>
           </View>
@@ -148,7 +149,7 @@ export default function HomeScreen() {
                   </View>
                   <Chip
                     compact
-                    style={[styles.countChip, { backgroundColor: color + '18' }]}
+                    style={[styles.countChip, { backgroundColor: withAlpha(color, 0x18 / 0xff) }]}
                     textStyle={{ color }}
                   >
                     {aggregate.count}
