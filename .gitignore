@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# quarantined stale worktrees (see .worktrees/quarantine-stale-20260921/README)
+.worktrees/
